@@ -1,4 +1,6 @@
 <?php
+namespace neoan3Db;
+
 class db
 {
 	private static $_db;
