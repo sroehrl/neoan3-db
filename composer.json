@@ -4,7 +4,7 @@
   "version": "0.0.2",
   "autoload": {
     "psr-4": {
-      "Neoan3\\Apps\\": "app/"
+      "Neoan3\\Apps\\Db": "./"
     }
 
   }
