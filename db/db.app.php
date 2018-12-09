@@ -1,7 +1,7 @@
 <?php
-namespace neoan3Db;
+namespace neoan3\apps;
 
-class db
+class Db
 {
 	private static $_db;
 	private static $_connected;

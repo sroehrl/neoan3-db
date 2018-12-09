@@ -1,6 +1,6 @@
 {
   "name": "neoan3-apps/db",
-  "description": "neoan mysqli class",
+  "description": "neoan3 mysqli class",
   "version": "0.0.1",
   "autoload": {
     "psr-4": {
