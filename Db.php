@@ -1,12 +1,28 @@
 <?php
 namespace Neoan3\Apps;
 
+/**
+ * Class Db
+ * @package Neoan3\Apps
+ */
 class Db
 {
-	private static $_db;
-	private static $_connected;
+    /**
+     * @var
+     */
+    private static $_db;
+    /**
+     * @var
+     */
+    private static $_connected;
 
-	public static function ask($param1, $param2 = null, $param3 = null) {
+    /**
+     * @param $param1
+     * @param null $param2
+     * @param null $param3
+     * @return array|int|mixed
+     */
+    public static function ask($param1, $param2 = null, $param3 = null) {
 		if(is_array($param1)) {
 			return self::smartSelect($param1, $param2, $param3);
 		}
@@ -22,7 +38,15 @@ class Db
 			}
 		}
 	}
-	public static function easy($selectorString,$conditionArray=array(),$callFunctions=array(),$output='data'){
+
+    /**
+     * @param $selectorString
+     * @param array $conditionArray
+     * @param array $callFunctions
+     * @param string $output
+     * @return mixed
+     */
+    public static function easy($selectorString, $conditionArray=array(), $callFunctions=array(), $output='data'){
         $qStr = 'SELECT ';
         $i = 0;
         $selects = explode(' ',$selectorString);
@@ -68,7 +92,12 @@ class Db
         return $data[$output];
     }
 
-	public static function data($sql, $type = 'query') {
+    /**
+     * @param $sql
+     * @param string $type
+     * @return array
+     */
+    public static function data($sql, $type = 'query') {
         if(defined('hard_debug')){
             var_dump($sql);
             die();
@@ -100,18 +129,30 @@ class Db
 		return $return;
 	}
 
-	public static function query($sql) {
+    /**
+     * @param $sql
+     * @return array
+     */
+    public static function query($sql) {
 		self::connect();
 		$query = mysqli_query(self::$_db, $sql) or die(mysqli_error(self::$_db));
 		return array('result' => $query, 'link' => self::$_db);
 	}
+
+    /**
+     * @param $sql
+     * @return array
+     */
     public static function multi_query($sql) {
         self::connect();
         $query = mysqli_multi_query(self::$_db, $sql) or die(mysqli_error(self::$_db));
         return array('result' => $query, 'link' => self::$_db);
     }
 
-	private static function connect() {
+    /**
+     *
+     */
+    private static function connect() {
 		if(!self::$_db) {
 			self::$_db = mysqli_connect(db_host, db_user, db_password);
 			mysqli_select_db(self::$_db, db_name);
@@ -119,14 +160,26 @@ class Db
         }
 	}
 
-	private static function smartQuery($path, $fields = null) {
+    /**
+     * @param $path
+     * @param null $fields
+     * @return array
+     */
+    private static function smartQuery($path, $fields = null) {
 		$sql = file_get_contents(path . '/src/' . $path . '/' . $path . '.sql');
 		if(!empty($fields)) {
 			$sql = str_replace(array_map('self::curlyBraces', array_keys($fields)), array_values($fields), $sql);
 		}
 		return self::data($sql, 'query');
 	}
-	private static function smartSelect($table, $fields = null, $where = null) {
+
+    /**
+     * @param $table
+     * @param null $fields
+     * @param null $where
+     * @return mixed
+     */
+    private static function smartSelect($table, $fields = null, $where = null) {
 		$additional = '';
 		if(is_array($table)){
 			$additional = self::calls($table);
@@ -157,7 +210,13 @@ class Db
 		return $data['data'];
 	}
 
-	private static function smartUpdate($table, $fields, $where) {
+    /**
+     * @param $table
+     * @param $fields
+     * @param $where
+     * @return int
+     */
+    private static function smartUpdate($table, $fields, $where) {
 		$fieldsString = '';
 		$i = 0;
 		foreach($fields as $key => $val) {
@@ -179,7 +238,12 @@ class Db
 		return (int) $data['callData']['rows'];
 	}
 
-	private static function smartInsert($table, $fields) {
+    /**
+     * @param $table
+     * @param $fields
+     * @return int
+     */
+    private static function smartInsert($table, $fields) {
 		$fieldsString = '';
 		$i = 0;
 		foreach($fields as $key => $val) {
@@ -192,7 +256,12 @@ class Db
 		$data = self::data($processed, 'insert');
 		return (int) $data['callData']['lastId'];
 	}
-	private static function checkAs($rest){
+
+    /**
+     * @param $rest
+     * @return string
+     */
+    private static function checkAs($rest){
         if(empty($rest) || $rest == '' || strpos($rest,'*')!== false){
             // catch asterix-selector
             return '';
@@ -208,6 +277,11 @@ class Db
             return ' as '. preg_replace('/[^a-zA-Z_]/','',$rest);
         }
     }
+
+    /**
+     * @param $rest
+     * @return mixed
+     */
     private static function cleanAs($rest){
         $as = explode(':',$rest);
         $als = explode('.',$rest);
@@ -219,7 +293,12 @@ class Db
             return $rest;
         }
     }
-	private static function selectandi($string){
+
+    /**
+     * @param $string
+     * @return string
+     */
+    private static function selectandi($string){
 		$firstLetter = strtolower(substr($string, 0, 1));
 		$rest = substr($string, 1);
 		$return = '';
@@ -231,7 +310,13 @@ class Db
 		}
 		return $return . self::checkAs($string);
 	}
-	private static function operandi($string, $set = false) {
+
+    /**
+     * @param $string
+     * @param bool $set
+     * @return bool|string
+     */
+    private static function operandi($string, $set = false) {
 		if(empty($string) && $string !== "0") {
 			return ($set ? ' = NULL' : ' IS NULL');
 		}
@@ -265,7 +350,11 @@ class Db
 		return $return;
 	}
 
-	public static function escape($inp) {
+    /**
+     * @param $inp
+     * @return array|mixed
+     */
+    public static function escape($inp) {
 		if(is_array($inp))
 			return array_map(__METHOD__, $inp);
 
@@ -275,15 +364,28 @@ class Db
 		return $inp;
 	}
 
-	private static function curlyBraces($str) {
+    /**
+     * @param $str
+     * @return string
+     */
+    private static function curlyBraces($str) {
 		return '{{' . $str . '}}';
 	}
 
-	private static function formatError($info) {
+    /**
+     * @param $info
+     * @return bool
+     */
+    private static function formatError($info) {
 		die('MYSQL: ' . $info);
 		return false;
 	}
-	private static function calls($array){
+
+    /**
+     * @param $array
+     * @return string
+     */
+    private static function calls($array){
 		if(count($array) > 1) {
 			$trash = array_shift($array);
 			foreach($array as $key => $value) {
@@ -293,6 +395,10 @@ class Db
 		}
 		return '';
 	}
+
+    /**
+     * @param string $what
+     */
     public static function debug($what='soft') {
         switch($what){
             case 'soft' : define('ask_debug',true);
@@ -301,18 +407,32 @@ class Db
                 break;
         }
     }
+
+    /**
+     * @param $json
+     * @return string
+     */
     public static function secureJson($json){
 	    return '{ = "' . addslashes($json) . '" }';
     }
 	//callfuncs
 
-	static function orderBy($array) {
+    /**
+     * @param $array
+     * @return string
+     */
+    static function orderBy($array) {
 		$origin = $array;
 		if(count($array) > 1) {
 			self::calls(array_shift($array));
 		}
 		return ' ORDER BY ' . $origin[0] . ' ' . strtoupper($origin[1]);
 	}
+
+    /**
+     * @param $array
+     * @return string
+     */
     static function groupBy($array) {
         $origin = $array;
         if(count($array) > 1) {
@@ -320,6 +440,11 @@ class Db
         }
         return ' GROUP BY ' . $origin[0] . (intval($origin[1])>0?', ' . $origin[1]:'');
     }
+
+    /**
+     * @param $array
+     * @return string
+     */
     static function limit($array) {
         $origin = $array;
         if(count($array) > 1) {
