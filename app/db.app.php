@@ -1,5 +1,5 @@
 <?php
-namespace neoan3\apps;
+namespace Neoan3\Apps;
 
 class Db
 {
