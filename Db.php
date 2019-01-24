@@ -1,6 +1,5 @@
 <?php
 namespace Neoan3\Apps;
-
 /**
  * Class Db
  * @package Neoan3\Apps
@@ -51,7 +50,7 @@ class Db
         $i = 0;
         $selects = explode(' ',$selectorString);
         foreach ($selects as $what){
-            $qStr .= ($i>0?', ':''). self::selectandi($what);
+            $qStr .= ($i>0?', ':''). DbOps::selectandi($what);
             $i++;
         }
         $qStr .= ' FROM ';
@@ -75,7 +74,7 @@ class Db
                 if(is_numeric($key)){
                     $key = substr($value,1);
                 }
-                $val = self::operandi($value);
+                $val = DbOps::operandi($value);
                 $qStr .= ($i > 0 ? "  AND " : ' WHERE ') . $key .  $val;
                 $i++;
             }
@@ -182,21 +181,21 @@ class Db
     private static function smartSelect($table, $fields = null, $where = null) {
 		$additional = '';
 		if(is_array($table)){
-			$additional = self::calls($table);
+			$additional = DbCallFunctions::calls($table);
 			$table = $table['from'];
 		}
 
 		$fieldsString = '';
 		$i = 0;
 		foreach($fields as $val) {
-			$fieldsString .= ($i > 0 ? ",\n  " : '') . self::selectandi($val);
+			$fieldsString .= ($i > 0 ? ",\n  " : '') . DbOps::selectandi($val);
 			$i++;
 		}
 		$whereString = '';
 		$i = 0;
 		if(!empty($where)) {
 			foreach($where as $key => $val) {
-				$val = self::operandi($val);
+				$val = DbOps::operandi($val);
 				$whereString .= ($i > 0 ? "\n  AND " : 'WHERE ') . $key .  $val;
 				$i++;
 			}
@@ -204,7 +203,7 @@ class Db
 		$whereString .= $additional;
 		$array = array('table' => $table, 'fields_block' => $fieldsString, 'where_block' => $whereString);
 
-		$sql = file_get_contents(neoan_path . '/apps/query/_query.sql');
+		$sql = file_get_contents(dirname(__FILE__) . '/query/_query.sql');
 		$processed = str_replace(array_map('self::curlyBraces', array_keys($array)), array_values($array), $sql);
 		$data = self::data($processed, 'query');
 		return $data['data'];
@@ -220,19 +219,19 @@ class Db
 		$fieldsString = '';
 		$i = 0;
 		foreach($fields as $key => $val) {
-			$fieldsString .= ($i > 0 ? ",\n  " : '') . $key . self::operandi($val, true);
+			$fieldsString .= ($i > 0 ? ",\n  " : '') . $key . DbOps::operandi($val, true);
 			$i++;
 		}
 		$whereString = '';
 		$i = 0;
 		foreach($where as $key => $val) {
-			$val = self::operandi($val);
+			$val = DbOps::operandi($val);
 			$whereString .= ($i > 0 ? "\n  AND " : '') . $key . $val;
 			$i++;
 		}
 		$array = array('table' => $table, 'fields_block' => $fieldsString, 'where_block' => $whereString);
 
-		$sql = file_get_contents(neoan_path . '/apps/query/_update.sql');
+		$sql = file_get_contents(dirname(__FILE__) . '/query/_update.sql');
 		$processed = str_replace(array_map('self::curlyBraces', array_keys($array)), array_values($array), $sql);
 		$data = self::data($processed, 'update');
 		return (int) $data['callData']['rows'];
@@ -247,108 +246,16 @@ class Db
 		$fieldsString = '';
 		$i = 0;
 		foreach($fields as $key => $val) {
-			$fieldsString .= ($i > 0 ? ",\n  " : '') . $key . self::operandi($val, true);
+			$fieldsString .= ($i > 0 ? ",\n  " : '') . $key . DbOps::operandi($val, true);
 			$i++;
 		}
 		$array = array('table' => $table, 'fields_block' => $fieldsString);
-		$sql = file_get_contents(neoan_path . '/apps/query/_insert.sql');
+		$sql = file_get_contents(dirname(__FILE__) . '/query/_insert.sql');
 		$processed = str_replace(array_map('self::curlyBraces', array_keys($array)), array_values($array), $sql);
 		$data = self::data($processed, 'insert');
 		return (int) $data['callData']['lastId'];
 	}
 
-    /**
-     * @param $rest
-     * @return string
-     */
-    private static function checkAs($rest){
-        if(empty($rest) || $rest == '' || strpos($rest,'*')!== false){
-            // catch asterix-selector
-            return '';
-        }
-        $as = explode(':',$rest);
-        $als = explode('.',$rest);
-        if(count($as)>1){
-            return ' as '.$as[1];
-        } elseif (count($als)>1){
-            return ' as '.$als[1];
-        } else {
-
-            return ' as '. preg_replace('/[^a-zA-Z_]/','',$rest);
-        }
-    }
-
-    /**
-     * @param $rest
-     * @return mixed
-     */
-    private static function cleanAs($rest){
-        $as = explode(':',$rest);
-        $als = explode('.',$rest);
-        if(count($as)>1){
-            return $as[0];
-        } elseif (count($als)>1){
-            return $als[0];
-        } else {
-            return $rest;
-        }
-    }
-
-    /**
-     * @param $string
-     * @return string
-     */
-    private static function selectandi($string){
-		$firstLetter = strtolower(substr($string, 0, 1));
-		$rest = substr($string, 1);
-		$return = '';
-		switch($firstLetter) {
-			case '#':
-			    $return = 'UNIX_TIMESTAMP(' . self::cleanAs($rest) . ')*1000';
-                break;
-			default: $return = $string;
-		}
-		return $return . self::checkAs($string);
-	}
-
-    /**
-     * @param $string
-     * @param bool $set
-     * @return bool|string
-     */
-    private static function operandi($string, $set = false) {
-		if(empty($string) && $string !== "0") {
-			return ($set ? ' = NULL' : ' IS NULL');
-		}
-
-		$firstLetter = strtolower(substr($string, 0, 1));
-		$return = '';
-		switch($firstLetter) {
-			case '>':
-			case '<':
-				$return = ' ' . $firstLetter . ' "' . intval(substr($string, 1)) . '"';
-				break;
-			case '.':
-				$return = ' = NOW()';
-				break;
-			case '!':
-				$return = (strtolower($string) == '!null' || strlen($string) == 1 ? (!$set ? ' IS NOT NULL' : self::formatError('Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"')) : ($set ? self::formatError('Cannot use "!= ' . substr($string, 1) . '" to set a value') : ' != "' . substr($string, 1) . '"'));
-				break;
-			case '{':
-				$return = ' ' . substr($string, 1, -1);
-				break;
-			case 'n':
-				$return = (strtolower($string) == 'null' ? ($set ? ' = NULL' : ' IS NULL') : ' = "' . self::escape($string) . '"');
-				break;
-            case '^':
-                $return = ($set ? ' = NULL' : ' IS NULL');
-                break;
-			default:
-				$return = ' = "' . self::escape($string) . '"';
-				break;
-		}
-		return $return;
-	}
 
     /**
      * @param $inp
@@ -378,23 +285,8 @@ class Db
      */
     private static function formatError($info) {
 		die('MYSQL: ' . $info);
-		return false;
 	}
 
-    /**
-     * @param $array
-     * @return string
-     */
-    private static function calls($array){
-		if(count($array) > 1) {
-			$trash = array_shift($array);
-			foreach($array as $key => $value) {
-				$func = $key;
-				return self::$func($value);
-			}
-		}
-		return '';
-	}
 
     /**
      * @param string $what
@@ -415,41 +307,10 @@ class Db
     public static function secureJson($json){
 	    return '{ = "' . addslashes($json) . '" }';
     }
-	//callfuncs
-
-    /**
-     * @param $array
-     * @return string
-     */
-    static function orderBy($array) {
-		$origin = $array;
-		if(count($array) > 1) {
-			self::calls(array_shift($array));
-		}
-		return ' ORDER BY ' . $origin[0] . ' ' . strtoupper($origin[1]);
-	}
-
-    /**
-     * @param $array
-     * @return string
-     */
-    static function groupBy($array) {
-        $origin = $array;
-        if(count($array) > 1) {
-            self::calls(array_shift($array));
-        }
-        return ' GROUP BY ' . $origin[0] . (intval($origin[1])>0?', ' . $origin[1]:'');
+    public static function uuid(){
+        return new UuidHandler();
     }
 
-    /**
-     * @param $array
-     * @return string
-     */
-    static function limit($array) {
-        $origin = $array;
-        if(count($array) > 1) {
-            self::calls(array_shift($array));
-        }
-		return ' LIMIT ' . $origin[0] . (intval($origin[1])>0?', ' . $origin[1]:'');
-    }
+
+
 }
