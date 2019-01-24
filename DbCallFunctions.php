@@ -9,6 +9,10 @@
 namespace Neoan3\Apps;
 
 
+/**
+ * Class DbCallFunctions
+ * @package Neoan3\Apps
+ */
 class DbCallFunctions {
     /**
      * @param $array

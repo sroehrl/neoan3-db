@@ -8,6 +8,10 @@
 
 namespace Neoan3\Apps;
 
+/**
+ * Class DbOps
+ * @package Neoan3\Apps
+ */
 class DbOps {
     /**
      * @param $string

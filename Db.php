@@ -307,6 +307,10 @@ class Db
     public static function secureJson($json){
 	    return '{ = "' . addslashes($json) . '" }';
     }
+
+    /**
+     * @return UuidHandler
+     */
     public static function uuid(){
         return new UuidHandler();
     }
