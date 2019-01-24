@@ -2,6 +2,13 @@
   "name": "neoan3-apps/db",
   "description": "neoan3 mysqli class",
   "version": "0.0.2",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Stefan Roehrl",
+      "homepage": "http://neoan.us"
+    }
+  ],
   "autoload": {
     "psr-4": {
       "Neoan3\\Apps\\": "./"
