@@ -13,12 +13,26 @@ namespace Neoan3\Apps;
  * @package Neoan3\Apps
  */
 class DbOps {
+    private static $preparedExclusions = [];
+    static function getExclusions(){
+        return self::$preparedExclusions;
+    }
+    static function clearExclusions(){
+        self::$preparedExclusions = [];
+    }
+    static function addExclusion($value,$type){
+        self::$preparedExclusions[] = self::prepareBinding($value,$type);
+    }
+    static function prepareBinding($value, $type){
+        return ['type'=>$type,'value'=>$value];
+    }
     /**
      * @param $string
      * @param bool $set
-     * @return bool|string
+     * @param bool $prepared
+     * @return array|bool|string
      */
-    static function operandi($string, $set = false) {
+    static function operandi($string, $set = false, $prepared = false) {
         if(empty($string) && $string !== "0") {
             return ($set ? ' = NULL' : ' IS NULL');
         }
@@ -38,18 +52,23 @@ class DbOps {
             case '{':
                 $return = ' ' . substr($string, 1, -1);
                 break;
-            case 'n':
-                $return = (strtolower($string) == 'null' ? ($set ? ' = NULL' : ' IS NULL') : ' = "' . Db::escape($string) . '"');
-                break;
             case '^':
                 $return = ($set ? ' = NULL' : ' IS NULL');
                 break;
             default:
-                $return = ' = "' . Db::escape($string) . '"';
+                if(strtolower($string) == 'null'){
+                    $return = ($set ? ' = NULL' : ' IS NULL');
+                } elseif($prepared){
+                    $return = ' = ? ';
+                    self::addExclusion($string,'s');
+                } else {
+                    $return = ' = "'. Db::escape($string) . '"';
+                }
                 break;
         }
         return $return;
     }
+
     /**
      * @param $string
      * @return string
