@@ -26,7 +26,8 @@ class Db {
             return self::smartSelect($param1, $param2, $param3);
         } else {
 		    switch(substr($param1,0,1)){
-                case '/': return self::smartQuery(substr($param1, 1), $param2);
+                case '>':
+		        case '/': return self::smartQuery($param1, $param2);
                     break;
                 case '?': return self::smartSelect(substr($param1, 1), $param2, $param3);
                     break;
@@ -252,9 +253,14 @@ class Db {
      * @return array
      */
     private static function smartQuery($path, $fields = null) {
-        $parts = explode('/',$path);
-        $file = isset($parts[1])?$parts[1]:$parts[0];
-        $sql = file_get_contents(path . '/component/' . $parts[0] . '/' . $file . '.sql');
+        $rest = substr($path,1);
+        if(substr($path,0,1)=='>'){
+            $sql = $rest;
+        } else {
+            $parts = explode('/',$rest);
+            $file = isset($parts[1])?$parts[1]:$parts[0];
+            $sql = file_get_contents(path . '/component/' . $parts[0] . '/' . $file . '.sql');
+        }
 		if(!empty($fields)) {
             $sql = preg_replace_callback('/\{\{([a-zA-Z_]+)\}\}/',function($hit) use ($fields){
                 DbOps::addExclusion($fields[$hit[1]],'s');

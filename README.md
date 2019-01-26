@@ -51,7 +51,8 @@ It returns an array of associative arrays.
 |---| --- | --- |
 |INSERT|`Db::ask('user',['first_name'=>'Richard']);`| `INSERT INTO user(first_name) VALUES(?)` 's' 'Richard' |
 |UPDATE|`Db::ask('user',['first_name'=>'Richard'],['last_name'=>'Hawk']);` | `UPDATE user SET first_name = ? WHERE last_name = ?` 'ss' 'Richard' 'Hawk' |
-|ANY| `Db::ask('/user',['name'=>'Richard Hawk'])` | `SELECT * FROM user WHERE CONCAT_WS(' ',first_name,last_name) LIKE ?` 's' 'Richard Hawk'|
+|ANY(inline)| `Db::ask('>SELECT * FROM user WHERE first_name = {{first_name}}',['first_name'=>'Richard'])` | `SELECT * FROM user WHERE first_name LIKE ?` 's' 'Richard'|
+|ANY(file)| `Db::ask('/user',['name'=>'Richard Hawk'])` | `SELECT * FROM user WHERE CONCAT_WS(' ',first_name,last_name) LIKE ?` 's' 'Richard Hawk'|
 
 /component/user/user.sql:
 
@@ -101,3 +102,6 @@ These modifiers should be used with the "as-declaration"
 ## Heads up
 The general approach of the db-app has been applied for years. While the difference to common wrappers for mysqli of pdo seems rather big,
 developers are usually surprised of the low learning-curve and possibilities for faster development it offers.
+
+### Deprecation
+The Db::data-function is considered unsafe without proper escaping and throws a deprecation-notice since 0.0.3

@@ -37,6 +37,9 @@ $id = Db::uuid();
 // ask select
 //$test = Db::ask('?user',['username'],['password'=>123456]);
 
+// ask any-inline
+$test = Db::ask('>SELECT * FROM user WHERE password = {{password}}',['password'=>123456]);
+
 // easy
 //$test = Db::easy('user.* $user.id:id',['password'=>'!']);
 
@@ -55,6 +58,6 @@ foreach ($users as $user){
     array_unshift($user,$id->newUuid()->uuid);
     Db::executeStmt($stmt,'sss',$user);
 }*/
-$test = Db::easy('user.* $user.id:id');
+//$test = Db::easy('user.* $user.id:id');
 var_dump($test);
 die();
