@@ -13,16 +13,38 @@ namespace Neoan3\Apps;
  * @package Neoan3\Apps
  */
 class DbOps {
+    /**
+     * @var array
+     */
     private static $preparedExclusions = [];
+
+    /**
+     * @return array
+     */
     static function getExclusions(){
         return self::$preparedExclusions;
     }
+
+    /**
+     *
+     */
     static function clearExclusions(){
         self::$preparedExclusions = [];
     }
-    static function addExclusion($value,$type){
+
+    /**
+     * @param $value
+     * @param $type
+     */
+    static function addExclusion($value, $type){
         self::$preparedExclusions[] = self::prepareBinding($value,$type);
     }
+
+    /**
+     * @param $value
+     * @param $type
+     * @return array
+     */
     static function prepareBinding($value, $type){
         return ['type'=>$type,'value'=>$value];
     }
@@ -46,8 +68,27 @@ class DbOps {
             case '.':
                 $return = ' = NOW()';
                 break;
+            case '$':
+                $rest = substr($string, 1);
+                if($prepared){
+                    $return = ' = UNHEX(?)';
+                    self::addExclusion($rest,'s');
+                } else {
+                    $return = ' = UNHEX("'.$rest.'")';
+                }
+                break;
             case '!':
-                $return = (strtolower($string) == '!null' || strlen($string) == 1 ? (!$set ? ' IS NOT NULL' : self::formatError('Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"')) : ($set ? self::formatError('Cannot use "!= ' . substr($string, 1) . '" to set a value') : ' != "' . substr($string, 1) . '"'));
+                if(strtolower($string) == '!null' || strlen($string) == 1){
+                    if($set){
+                        self::formatError('Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"');
+                    }
+                    $return = ' IS NOT NULL ';
+                } else {
+                    if($set){
+                        self::formatError('Cannot use "!= ' . substr($string, 1) . '" to set a value');
+                    }
+                    $return = ' != "' . substr($string, 1) . '"';
+                }
                 break;
             case '{':
                 $return = ' ' . substr($string, 1, -1);
@@ -122,6 +163,13 @@ class DbOps {
         } else {
             return $rest;
         }
+    }
+    /**
+     * @param $info
+     * @return bool
+     */
+    static function formatError($info) {
+        die('MYSQL: ' . $info);
     }
 
 }

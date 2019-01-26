@@ -16,8 +16,11 @@ class UuidHandler {
     }
 
     public function newUuid(){
-        $this->uuid = Db::data('SELECT REPLACE(UUID(),"-","") as id')['data'][0]['id'];
+        $q = Db::query('SELECT REPLACE(UUID(),"-","") as id');
 
+        while($row = $q['result']->fetch_assoc()){
+            $this->uuid = $row['id'];
+        }
         return $this;
     }
     public function insertAsBinary($uuid=false){

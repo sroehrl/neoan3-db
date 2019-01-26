@@ -1,11 +1,11 @@
 <?php
 namespace Neoan3\Apps;
+
 /**
  * Class Db
  * @package Neoan3\Apps
  */
-class Db
-{
+class Db {
     /**
      * @var
      */
@@ -39,6 +39,11 @@ class Db
             }
         }
 	}
+
+    /**
+     * @param $fields
+     * @return string
+     */
     private static function handleSelectandi($fields){
         $i = 0;
         $res = '';
@@ -87,6 +92,11 @@ class Db
         }
         return self::handleResults($qStr);
     }
+
+    /**
+     * @param $conditionArray
+     * @return string
+     */
     private static function handleConditions($conditionArray){
         $return ='';
         $i = 0;
@@ -100,28 +110,66 @@ class Db
         }
         return $return;
     }
+
+    /**
+     * @param $qStr
+     * @return array
+     */
     public static function handleResults($qStr){
+        if(defined('db_hard_debug')){
+            return [
+                'sql'=>$qStr,
+                'exclusions'=>DbOps::getExclusions()
+            ];
+        }
         $result = [];
         if($exe =  self::preparedQuery($qStr)){
-            while ($row = $exe->fetch_assoc()){
-                $result[] = $row;
+            if($exe['result']){
+                while ($row = $exe['result']->fetch_assoc()){
+                    $result[] = $row;
+                }
+                $exe['result']->free();
+            } else {
+                $result = $exe;
             }
-            $exe->free();
-            DbOps::clearExclusions();
+
         }
+        DbOps::clearExclusions();
         return $result;
     }
+
+    /**
+     * @param $sql
+     * @return \mysqli_stmt
+     */
     public static function prepareStmt($sql){
         $db = self::connect();
         return $db->prepare($sql);
     }
-    public static function executeStmt($stmt,$types,$inserts){
-        $stmt->bind_param($types,...$inserts);
-        if(!$stmt->execute()){
-            return false;
+
+    /**
+     * @param $stmt
+     * @param $types
+     * @param $inserts
+     * @return array
+     */
+    public static function executeStmt($stmt, $types, $inserts){
+        try {
+            if(!$stmt->bind_param($types,...$inserts)){
+                throw new Exception('Binding error');
+            }
+        } catch (Exception $e){
+            DbOps::formatError('Declarative issue with '. implode(',',$inserts));
         }
-        return $stmt->get_result();
+
+        $stmt->execute();
+        return self::evaluateQuery($stmt);
     }
+
+    /**
+     * @param $sql
+     * @return array
+     */
     public static function preparedQuery($sql){
         if(!empty($exclusions = DbOps::getExclusions())){
             $prepared = self::prepareStmt($sql);
@@ -133,8 +181,21 @@ class Db
             }
             return self::executeStmt($prepared,$types,$inserts);
         } else {
-            return self::query($sql)['result'];
+            return self::query($sql);
         }
+    }
+
+    /**
+     * @param $resObj
+     * @return array
+     */
+    private static function evaluateQuery($resObj){
+        return [
+            'result'=>$resObj->get_result(),
+            'affected_rows'=>$resObj->affected_rows,
+            'insert_id'=>$resObj->num_rows,
+            'errno'=>$resObj->errno
+        ];
     }
 
     /**
@@ -146,7 +207,11 @@ class Db
         trigger_error('Deprecated function',E_USER_NOTICE);
         return Deprecated::data($sql,$type);
 	}
-	public static function raw(){
+
+    /**
+     * @return \mysqli
+     */
+    public static function raw(){
         return self::connect();
     }
 
@@ -176,9 +241,7 @@ class Db
     private static function connect() {
 		if(!self::$_db) {
 			self::$_db = new \mysqli(db_host, db_user, db_password,db_name);
-//			mysqli_select_db(self::$_db, db_name);
             self::$_db->set_charset('utf-8');
-//			mysqli_set_charset(self::$_db, 'utf8');
         }
 		return self::$_db;
 	}
@@ -217,8 +280,7 @@ class Db
 		$fieldsString = self::handleSelectandi($fields);
 		$whereString = self::handleConditions($where);
 		$whereString .= $additional;
-		$array = array('table' => $table, 'fields_block' => $fieldsString, 'where_block' => $whereString);
-		$sql = Ops::embrace(file_get_contents(dirname(__FILE__) . '/query/_query.sql'),$array);
+		$sql = 'SELECT ' . $fieldsString . ' FROM ' . $table . ' ' .$whereString;
 		return self::handleResults($sql);
 	}
 
@@ -229,10 +291,10 @@ class Db
      * @return mixed
      */
     private static function smartUpdate($table, $fields, $where) {
-		$fieldsString = self::handleSelectandi($fields);
+        $fieldsString = self::setFields($fields);
 		$whereString = self::handleConditions($where);
-		$array = array('table' => $table, 'fields_block' => $fieldsString, 'where_block' => $whereString);
-        $sql = Ops::embrace(file_get_contents(dirname(__FILE__) . '/query/_update.sql'),$array);
+        $sql = 'UPDATE '. $table . ' SET ' . $fieldsString . $whereString;
+
         return self::handleResults($sql);
 	}
 
@@ -242,11 +304,24 @@ class Db
      * @return mixed
      */
     private static function smartInsert($table, $fields) {
-		$fieldsString = self::handleSelectandi($fields);
-		$array = array('table' => $table, 'fields_block' => $fieldsString);
-        $sql = Ops::embrace(file_get_contents(dirname(__FILE__) . '/query/_insert.sql'),$array);
+		$fieldsString = self::setFields($fields);
+        $sql = 'INSERT INTO '. $table . ' SET ' . $fieldsString;
         return self::handleResults($sql);
 	}
+
+    /**
+     * @param $fields
+     * @return string
+     */
+    private static function setFields($fields){
+        $fieldsString = '';
+        $i = 0;
+        foreach($fields as $key => $val) {
+            $fieldsString .= ($i > 0 ? ",\n  " : '') . $key . DbOps::operandi($val, true,true);
+            $i++;
+        }
+        return $fieldsString;
+    }
 
 
     /**
@@ -263,33 +338,14 @@ class Db
 		return $inp;
 	}
 
-    /**
-     * @param $str
-     * @return string
-     */
-    private static function curlyBraces($str) {
-		return '{{' . $str . '}}';
-	}
 
-    /**
-     * @param $info
-     * @return bool
-     */
-    private static function formatError($info) {
-		die('MYSQL: ' . $info);
-	}
 
 
     /**
      * @param string $what
      */
-    public static function debug($what='soft') {
-        switch($what){
-            case 'soft' : define('ask_debug',true);
-                break;
-            case 'hard' : define('hard_debug',true);
-                break;
-        }
+    public static function debug() {
+        define('db_hard_debug',true);
     }
 
     /**
