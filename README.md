@@ -47,7 +47,7 @@ The ask-function can execute queries based on how it is used.
 It is best to start understanding the examples below.
 It returns an array of associative arrays.
 
-| Action | example | SQL & explanation |
+| Action | example | SQL & binding |
 |---| --- | --- |
 |INSERT|`Db::ask('user',['first_name'=>'Richard']);`| `INSERT INTO user(first_name) VALUES(?)` 's' 'Richard' |
 |UPDATE|`Db::ask('user',['first_name'=>'Richard'],['last_name'=>'Hawk']);` | `UPDATE user SET first_name = ? WHERE last_name = ?` 'ss' 'Richard' 'Hawk' |
