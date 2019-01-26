@@ -263,6 +263,10 @@ class Db {
         }
 		if(!empty($fields)) {
             $sql = preg_replace_callback('/\{\{([a-zA-Z_]+)\}\}/',function($hit) use ($fields){
+                if(!isset($fields[$hit[1]])){
+                    var_dump('Required field missing');
+                    die();
+                }
                 DbOps::addExclusion($fields[$hit[1]],'s');
                 return '?';
             },$sql);
