@@ -32,7 +32,7 @@ class DbCallFunctions {
      * @param $array
      * @return string
      */
-    private static function orderBy($array) {
+     static function orderBy($array) {
         $origin = $array;
         if(count($array) > 1) {
             self::calls(array_shift($array));
@@ -44,7 +44,7 @@ class DbCallFunctions {
      * @param $array
      * @return string
      */
-    private static function groupBy($array) {
+     static function groupBy($array) {
         $origin = $array;
         if(count($array) > 1) {
             self::calls(array_shift($array));
@@ -56,7 +56,7 @@ class DbCallFunctions {
      * @param $array
      * @return string
      */
-    private static function limit($array) {
+     static function limit($array) {
         $origin = $array;
         if(count($array) > 1) {
             self::calls(array_shift($array));

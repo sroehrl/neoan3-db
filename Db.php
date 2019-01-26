@@ -85,7 +85,7 @@ class Db {
         }
         if(!empty($callFunctions)){
             foreach ($callFunctions as $callFunction=>$arguments){
-                $qStr .= self::$callFunction($arguments) ."\n";
+                $qStr .= DbCallFunctions::$callFunction($arguments) ."\n";
             }
         }
         if($output=='debug'){
