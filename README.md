@@ -31,7 +31,7 @@ As such, the following assumptions are made for best usability (auto-joins etc.)
 - when handling rows marked as deleted, the field name must be "delete_date" (type can be DATE or DATETIME)
 
 ## Getting started
-### Db::Easy($selectorString [, $conditionArray, $callFunctions, $debug])
+### Db::easy($selectorString [, $conditionArray, $callFunctions, $debug])
 The easy-function converts a string into a prepared statement and executes it.
 It returns an array of associative arrays.
 
