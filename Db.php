@@ -304,6 +304,9 @@ class Db {
      * @return mixed
      */
     private static function smartInsert($table, $fields) {
+        if(!isset($fields['id'])&&defined('db_assumes_uuid')&&db_assumes_uuid){
+            $fields['id'] = self::uuid()->insertAsBinary();
+        }
 		$fieldsString = self::setFields($fields);
         $sql = 'INSERT INTO '. $table . ' SET ' . $fieldsString;
         return self::handleResults($sql);
