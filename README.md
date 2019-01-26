@@ -76,18 +76,18 @@ Handling field-name modifications.
 
 | Example | simplified SQL logic |
 |---|---|
-|`db::easy('user.name:username')`|`SELECT user.name as username FROM user`|
+|`Db::easy('user.name:username')`|`SELECT user.name as username FROM user`|
 
 ### Conditional modifiers (operandi)
 Common condition modifications can be applied by string-manipulation of the condition-array.
 
 | Example | simplified SQL logic |
 |---|---|
-|`db::easy('user.*',['delete_date'=>'!'])` or `db::easy('user.*',['^delete_date'])` | `SELECT * FROM user WHERE delete_date IS NOT NULL`|
-|`db::easy('user.*',['delete_date'=>''])` | `SELECT * FROM user WHERE delete_date IS NULL`|
-|`db::easy('user.*',['age'=>'>30'])` | `SELECT * FROM user WHERE age > 30`|
-|`db::easy('user.*',['id'=>'$123s..'])` | `SELECT * FROM user WHERE id = UNHEX(123s..)` (convert hex to binary)|
-|`db::easy('user.*',['delete_date'=>'.'])` | `SELECT * FROM user WHERE delete_date = NOW()`|
+|`Db::easy('user.*',['delete_date'=>'!'])` or `db::easy('user.*',['^delete_date'])` | `SELECT * FROM user WHERE delete_date IS NOT NULL`|
+|`Db::easy('user.*',['delete_date'=>''])` | `SELECT * FROM user WHERE delete_date IS NULL`|
+|`Db::easy('user.*',['age'=>'>30'])` | `SELECT * FROM user WHERE age > 30`|
+|`Db::easy('user.*',['id'=>'$123s..'])` | `SELECT * FROM user WHERE id = UNHEX(123s..)` (convert hex to binary)|
+|`Db::easy('user.*',['delete_date'=>'.'])` | `SELECT * FROM user WHERE delete_date = NOW()`|
 
 ### Value modifiers (selectandi)
 Common value-modifications can be applied by string-manipulation of the select-statement.
@@ -95,8 +95,8 @@ These modifiers should be used with the "as-declaration"
 
 | Example | simplified SQL logic |
 |---|---|
-|`db::easy('#user.insert_date:inserted')`| `SELECT UNIX_TIMESTAMP(user.insert_date)*1000 as inserted FROM user`|
-|`db::easy('user.* $user.id:id')` | `SELECT *, HEX(id) as id FROM user`|
+|`Db::easy('#user.insert_date:inserted')`| `SELECT UNIX_TIMESTAMP(user.insert_date)*1000 as inserted FROM user`|
+|`Db::easy('user.* $user.id:id')` | `SELECT *, HEX(id) as id FROM user`|
 
 ## Heads up
 The general approach of the db-app has been applied for years. While the difference to common wrappers for mysqli of pdo seems rather big,
