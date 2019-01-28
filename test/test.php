@@ -7,7 +7,7 @@ define('db_user','root');
 define('db_password','');
 
 //optional
-define('db_assumes_uuid',true);
+//define('db_assumes_uuid',true);
 
 require_once path . '/Db.php';
 require_once path . '/DbOps.php';
@@ -38,7 +38,7 @@ $id = Db::uuid();
 //$test = Db::ask('?user',['username'],['password'=>123456]);
 
 // ask any-inline
-$test = Db::ask('>SELECT * FROM user WHERE password = {{password}}',['password'=>123456]);
+//$test = Db::ask('>SELECT * FROM user WHERE password = {{password}}',['password'=>123456]);
 
 // easy
 //$test = Db::easy('user.* $user.id:id',['password'=>'!']);
@@ -59,5 +59,6 @@ foreach ($users as $user){
     Db::executeStmt($stmt,'sss',$user);
 }*/
 //$test = Db::easy('user.* $user.id:id');
+
 var_dump($test);
 die();

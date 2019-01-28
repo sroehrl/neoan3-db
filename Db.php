@@ -114,7 +114,7 @@ class Db {
 
     /**
      * @param $qStr
-     * @return array
+     * @return array|int
      */
     public static function handleResults($qStr){
         if(defined('db_hard_debug')){
@@ -133,9 +133,15 @@ class Db {
             } else {
                 $result = $exe;
             }
-
+            var_dump(self::$_db->insert_id);
+            var_dump('--');
         }
         DbOps::clearExclusions();
+        if(!defined('db_assumes_uuid')|| !db_assumes_uuid){
+            if(self::$_db->insert_id >0){
+                return self::$_db->insert_id;
+            }
+        }
         return $result;
     }
 
