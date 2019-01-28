@@ -3,7 +3,7 @@
 neoan3 app for mysqli connectivity
 
 ## Installation
-`composer require neoan3-apps/db --dev-master`
+`composer require neoan3-apps/db`
 
 See test/test.php for a quick guide.
 
