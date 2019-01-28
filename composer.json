@@ -1,8 +1,11 @@
 {
   "name": "neoan3-apps/db",
   "description": "neoan3 mysqli class",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
+  "require": {
+    "php": "^7.0"
+  },
   "authors": [
     {
       "name": "Stefan Roehrl",
