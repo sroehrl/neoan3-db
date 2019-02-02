@@ -20,13 +20,22 @@ $id = Db::uuid();
 // debug
 // db::debug();
 
-// ask insert
+// ask insert uuid
 /*$test = Db::ask('user',[
-    // Id can be auto-generated if db_assumes_uuid is set and primary field is 'id'
-    //'id'=>'$'.$id->uuid,
+    'id'=>'$'.$id->uuid,
     'username'=>'neoan_1',
     'password'=>'123456'
 ]);*/
+
+// ask insert a_i
+/*try{
+    $test = Db::ask('auto_id',[
+        'some'=>'neoan_1'
+    ]);
+} catch (\Exception $e){
+    var_dump($e->getMessage());
+}*/
+
 
 // ask update
 /*$test = Db::ask('user',[

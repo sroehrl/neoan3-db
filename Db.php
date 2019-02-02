@@ -142,6 +142,9 @@ class Db {
                 return self::$_db->insert_id;
             }
         }
+        if(self::$_db->affected_rows >0){
+            return self::$_db->affected_rows;
+        }
         return $result;
     }
 
@@ -228,7 +231,12 @@ class Db {
      */
     public static function query($sql) {
 		$db = self::connect();
-		$query = $db->query($sql) or die(mysqli_error(self::$_db));
+        mysqli_report(MYSQLI_REPORT_STRICT | MYSQLI_REPORT_ALL);
+        try{
+            $query = $db->query($sql);
+        } catch (\mysqli_sql_exception $e){
+            throw $e;
+        }
 		return array('result' => $query, 'link' => $db);
 	}
 
@@ -238,7 +246,12 @@ class Db {
      */
     public static function multi_query($sql) {
         self::connect();
-        $query = self::connect()->multi_query($sql) or die(mysqli_error(self::$_db));
+        mysqli_report(MYSQLI_REPORT_STRICT | MYSQLI_REPORT_ALL);
+        try{
+            $query = self::connect()->multi_query($sql);
+        } catch (\mysqli_sql_exception $e){
+            throw $e;
+        }
         return array('result' => $query, 'link' => self::$_db);
     }
 

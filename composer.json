@@ -4,7 +4,8 @@
   "version": "0.0.5",
   "license": "MIT",
   "require": {
-    "php": "^7.0"
+    "php": "^7.0",
+    "ext-mysqli": "*"
   },
   "authors": [
     {
