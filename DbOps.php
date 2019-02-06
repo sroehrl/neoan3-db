@@ -124,7 +124,15 @@ class DbOps {
             case '$':
                 $return = 'HEX(' . self::cleanAs($rest) . ')';
                 break;
-            default: $return = $string;
+            default:
+                if(
+                    defined('db_assumes_uuid')&&db_assumes_uuid &&
+                    (strpos($string,'.id') !== false || strpos($string,'_id')!== false)
+                ){
+                    $return = 'HEX(' . $string . ')';
+                } else {
+                    $return = $string;
+                }
         }
         return $return . self::checkAs($string);
     }
