@@ -125,14 +125,7 @@ class DbOps {
                 $return = 'HEX(' . self::cleanAs($rest) . ')';
                 break;
             default:
-                if(
-                    defined('db_assumes_uuid')&&db_assumes_uuid &&
-                    (strpos($string,'.id') !== false || strpos($string,'_id')!== false)
-                ){
-                    $return = 'HEX(' . $string . ')';
-                } else {
-                    $return = $string;
-                }
+                $return = $string;
         }
         return $return . self::checkAs($string);
     }
@@ -180,4 +173,11 @@ class DbOps {
         die('MYSQL: ' . $info);
     }
 
+    /**
+     * @param $str
+     * @return bool
+     */
+    static function isBinary($str) {
+        return preg_match('~[^\x20-\x7E\t\r\n]~', $str) > 0;
+    }
 }

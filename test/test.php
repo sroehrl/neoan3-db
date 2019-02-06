@@ -7,7 +7,7 @@ define('db_user','root');
 define('db_password','');
 
 //optional
-//define('db_assumes_uuid',true);
+define('db_assumes_uuid',true);
 
 require_once path . '/Db.php';
 require_once path . '/DbOps.php';
@@ -15,8 +15,11 @@ require_once path . '/UuidHandler.php';
 require_once path . '/Deprecated.php';
 
 use Neoan3\Apps\Db;
+use Neoan3\Apps\DbOps;
 
 $id = Db::uuid();
+
+
 // debug
 // db::debug();
 

@@ -23,6 +23,18 @@ class UuidHandler {
         }
         return $this;
     }
+    public function convertBinaryResults($resultArray){
+        foreach ($resultArray as $i => $item){
+            if(is_numeric($i)){
+                $resultArray[$i] = $this->convertBinaryResults($item);
+            } else {
+                if(DbOps::isBinary($item)){
+                    $resultArray[$i] = strtoupper(bin2hex($item));
+                }
+            }
+        }
+        return $resultArray;
+    }
     public function insertAsBinary($uuid=false){
         return '{ = '.$this->unhexUuid($uuid).' }';
     }
@@ -33,4 +45,5 @@ class UuidHandler {
     private function hexUuid($newUuid=false){
         return  'HEX('.($newUuid?'UUID()':'"'.$this->uuid.'"').')';
     }
+
 }

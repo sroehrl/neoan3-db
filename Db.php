@@ -133,15 +133,17 @@ class Db {
             } else {
                 $result = $exe;
             }
-
         }
         DbOps::clearExclusions();
         if(!defined('db_assumes_uuid')|| !db_assumes_uuid){
             if(self::$_db->insert_id >0){
                 return self::$_db->insert_id;
             }
+        } elseif(!empty($result)){
+            $handler = new UuidHandler();
+            $result = $handler->convertBinaryResults($result);
         }
-        if(self::$_db->affected_rows >0){
+        if(self::$_db->affected_rows >0 && empty($result)){
             return self::$_db->affected_rows;
         }
         return $result;
