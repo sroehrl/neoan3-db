@@ -231,7 +231,7 @@ class Db {
      */
     public static function query($sql) {
 		$db = self::connect();
-        mysqli_report(MYSQLI_REPORT_STRICT | MYSQLI_REPORT_ALL);
+        mysqli_report(MYSQLI_REPORT_STRICT);
         try{
             $query = $db->query($sql);
         } catch (\mysqli_sql_exception $e){
@@ -246,7 +246,7 @@ class Db {
      */
     public static function multi_query($sql) {
         self::connect();
-        mysqli_report(MYSQLI_REPORT_STRICT | MYSQLI_REPORT_ALL);
+        mysqli_report(MYSQLI_REPORT_STRICT);
         try{
             $query = self::connect()->multi_query($sql);
         } catch (\mysqli_sql_exception $e){
