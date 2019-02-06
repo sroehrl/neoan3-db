@@ -19,7 +19,7 @@ class DbCallFunctions {
      * @return string
      */
     static function calls($array){
-        if(count($array) > 1) {
+        if(is_countable($array)&&count($array) > 1) {
             array_shift($array);
             foreach($array as $key => $value) {
                 $func = $key;
@@ -62,5 +62,11 @@ class DbCallFunctions {
             self::calls(array_shift($array));
         }
         return ' LIMIT ' . $origin[0] . (intval($origin[1])>0?', ' . $origin[1]:'');
+    }
+}
+// Polyfill for PHP<7.3
+if (!function_exists('is_countable')) {
+    function is_countable($var) {
+        return (is_array($var) || $var instanceof Countable);
     }
 }
