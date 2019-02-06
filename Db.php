@@ -133,8 +133,7 @@ class Db {
             } else {
                 $result = $exe;
             }
-            var_dump(self::$_db->insert_id);
-            var_dump('--');
+
         }
         DbOps::clearExclusions();
         if(!defined('db_assumes_uuid')|| !db_assumes_uuid){
