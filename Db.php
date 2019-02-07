@@ -226,7 +226,7 @@ class Db {
      * @return array
      */
     public static function data($sql, $type = 'query') {
-        trigger_error('Deprecated function',E_USER_NOTICE);
+        self::deprecationWarning();
         return Deprecated::data($sql,$type);
 	}
 
@@ -385,7 +385,12 @@ class Db {
 	}
 
 
-
+    private static function deprecationWarning(){
+        $caller = next(debug_backtrace());
+        $msg = 'Deprecated function Db::data in function '.$caller['function'].' called from '.$caller['file'];
+        $msg .= ' on line '.$caller['line'];
+        trigger_error($msg,E_USER_NOTICE);
+    }
 
     /**
      * @param string $what
