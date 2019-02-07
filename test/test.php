@@ -53,7 +53,7 @@ $id = Db::uuid();
 //$test = Db::ask('>SELECT * FROM user WHERE password = {{password}}',['password'=>123456]);
 
 // easy
-//$test = Db::easy('user.* $user.id:id',['password'=>'!']);
+$test = Db::easy('user.* $user.id:id',['password'=>'!']);
 
 // data (deprecated)
 /*$test = Db::data('SELECT * FROM user')['data'];

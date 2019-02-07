@@ -19,7 +19,7 @@ class UuidHandler {
         $q = Db::query('SELECT REPLACE(UUID(),"-","") as id');
 
         while($row = $q['result']->fetch_assoc()){
-            $this->uuid = $row['id'];
+            $this->uuid = strtoupper($row['id']);
         }
         return $this;
     }
@@ -34,6 +34,14 @@ class UuidHandler {
             }
         }
         return $resultArray;
+    }
+    public function convertToCompliantUuid($uuid=false){
+        $id = ($uuid?$uuid:$this->uuid);
+        $arr = [8,13,18,23];
+        foreach ($arr as $part){
+            $id = substr_replace($id, '-', $part, 0);
+        }
+        return $id;
     }
     public function insertAsBinary($uuid=false){
         return '{ = '.$this->unhexUuid($uuid).' }';
