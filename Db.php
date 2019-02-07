@@ -3,7 +3,18 @@ namespace Neoan3\Apps;
 
 /**
  * Class Db
+ *
+ * The following defines as used and required
+ * db_host (e.g. localhost)
+ * db_user (e.g. root)
+ * db_name (e.g. my_db)
+ * db_password (e.g. WSLDOH32hj)
+ *
+ * The following defines are optional
+ * db_assumes_uuid (if defined && true, will assume BINARY(16) id-fields and react accordingly)
+ * db_file_location (if defined, will overwrite the default "component"- expectation for SQL-files)
  * @package Neoan3\Apps
+ *
  */
 class Db {
     /**
@@ -279,7 +290,9 @@ class Db {
         } else {
             $parts = explode('/',$rest);
             $file = isset($parts[1])?$parts[1]:$parts[0];
-            $sql = file_get_contents(path . '/component/' . $parts[0] . '/' . $file . '.sql');
+            $filePath = '/'.(defined('db_file_location')?db_file_location:'component').'/';
+            $filePath .= $parts[0] . '/' . $file . '.sql';
+            $sql = file_get_contents(path . $filePath);
         }
 		if(!empty($fields)) {
             $sql = preg_replace_callback('/\{\{([a-zA-Z_]+)\}\}/',function($hit) use ($fields){
