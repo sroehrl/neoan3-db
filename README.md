@@ -5,6 +5,21 @@ neoan3 app for mysqli connectivity
 ## Installation
 `composer require neoan3-apps/db`
 
+```PHP
+use Neoan3\Apps\Db;
+define('db_host','localhost');
+define('db_name','yourDB');
+define('db_user','root');
+define('db_password','Pwd');
+
+$test = Db::ask('>NOW() as now'); 
+
+/*
+*    $test: [0=>['now'=>'2019-01-01 12:12:12']]
+*/
+
+```
+
 See test/test.php for a quick guide.
 
 ### Expects the following defines
@@ -16,6 +31,9 @@ See test/test.php for a quick guide.
 |db_user | Name of db-user |
 |db_password | Password for user db_user |
 | db_assumes_uuid | (optional) If true, the app auto-generates uuids |
+| db_file_location | (optional)* |
+
+\*If not set, assumes "component" as a root-folder for sql-files. Only set this if you are NOT using neoan3.
 
  We recommend defining these values in your frame when using neoan3.
 
