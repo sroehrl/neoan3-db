@@ -1,20 +1,19 @@
 <?php
 namespace Neoan3\Apps;
 
+use mysqli_stmt;
+
 /**
  * Class Db
- *
  * The following defines as used and required
  * db_host (e.g. localhost)
  * db_user (e.g. root)
  * db_name (e.g. my_db)
  * db_password (e.g. WSLDOH32hj)
- *
  * The following defines are optional
  * db_assumes_uuid (if defined && true, will assume BINARY(16) id-fields and react accordingly)
  * db_file_location (if defined, will overwrite the default "component"- expectation for SQL-files)
  * @package Neoan3\Apps
- *
  */
 class Db {
     /**
@@ -162,7 +161,8 @@ class Db {
 
     /**
      * @param $sql
-     * @return \mysqli_stmt
+     *
+     * @return mysqli_stmt
      */
     public static function prepareStmt($sql){
         $db = self::connect();
