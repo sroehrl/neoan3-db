@@ -48,11 +48,14 @@ class DbOps {
     static function prepareBinding($value, $type){
         return ['type'=>$type,'value'=>$value];
     }
+
     /**
-     * @param $string
+     * @param      $string
      * @param bool $set
      * @param bool $prepared
+     *
      * @return array|bool|string
+     * @throws DbException
      */
     static function operandi($string, $set = false, $prepared = false) {
         if(empty($string) && $string !== "0") {
@@ -80,12 +83,12 @@ class DbOps {
             case '!':
                 if(strtolower($string) == '!null' || strlen($string) == 1){
                     if($set){
-                        self::formatError('Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"');
+                        self::formatError([$string], 'Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"');
                     }
                     $return = ' IS NOT NULL ';
                 } else {
                     if($set){
-                        self::formatError('Cannot use "!= ' . substr($string, 1) . '" to set a value');
+                        self::formatError([$string], 'Cannot use "!= ' . substr($string, 1) . '" to set a value');
                     }
                     $return = ' != "' . substr($string, 1) . '"';
                 }
@@ -165,12 +168,22 @@ class DbOps {
             return $rest;
         }
     }
+
+
     /**
-     * @param $info
-     * @return bool
+     * @param      $values
+     * @param      $msg
+     * @param bool $sql
+     *
+     * @throws DbException
      */
-    static function formatError($info) {
-        die('MYSQL: ' . $info);
+    static function formatError($values, $msg, $sql = false) {
+        $format = $msg . ' Given values: ' . implode(', ', $values);
+        if (defined('db_dev_errors') && db_dev_errors && $sql) {
+            $format .= ' SQL: ' . $sql;
+        }
+
+        throw new DbException($format);
     }
 
     /**

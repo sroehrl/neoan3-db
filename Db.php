@@ -1,6 +1,8 @@
 <?php
 namespace Neoan3\Apps;
 
+use mysqli;
+use mysqli_sql_exception;
 use mysqli_stmt;
 
 /**
@@ -23,21 +25,22 @@ class Db {
     /**
      * @var
      */
-    private static $_connected;
 
     /**
-     * @param $param1
+     * @param      $param1
      * @param null $param2
      * @param null $param3
+     *
      * @return array|int|mixed
+     * @throws DbException
      */
     public static function ask($param1, $param2 = null, $param3 = null) {
-		if(is_array($param1)){
+        if(is_array($param1)){
             return self::smartSelect($param1, $param2, $param3);
         } else {
-		    switch(substr($param1,0,1)){
+            switch(substr($param1,0,1)){
                 case '>':
-		        case '/': return self::smartQuery($param1, $param2);
+                case '/': return self::smartQuery($param1, $param2);
                     break;
                 case '?': return self::smartSelect(substr($param1, 1), $param2, $param3);
                     break;
@@ -49,7 +52,7 @@ class Db {
                     }
             }
         }
-	}
+    }
 
     /**
      * @param $fields
@@ -64,6 +67,7 @@ class Db {
         }
         return $res;
     }
+
     /**
      * @param $selectorString
      * @param array $conditionArray
@@ -94,7 +98,7 @@ class Db {
             $qStr .= self::handleConditions($conditionArray);
         }
         if(!empty($callFunctions)){
-            foreach ($callFunctions as $callFunction=>$arguments){
+            foreach ($callFunctions as $callFunction=> $arguments){
                 $qStr .= DbCallFunctions::$callFunction($arguments) ."\n";
             }
         }
@@ -106,12 +110,14 @@ class Db {
 
     /**
      * @param $conditionArray
+     *
      * @return string
+     * @throws DbException
      */
     private static function handleConditions($conditionArray){
         $return ='';
         $i = 0;
-        foreach ($conditionArray as $key =>$value) {
+        foreach ($conditionArray as $key => $value) {
             if(is_numeric($key)){
                 $key = substr($value,1);
             }
@@ -124,7 +130,9 @@ class Db {
 
     /**
      * @param $qStr
+     *
      * @return array|int
+     * @throws DbException
      */
     public static function handleResults($qStr){
         if(defined('db_hard_debug')){
@@ -173,24 +181,31 @@ class Db {
      * @param $stmt
      * @param $types
      * @param $inserts
+     *
      * @return array
+     * @throws DbException
      */
     public static function executeStmt($stmt, $types, $inserts){
         try {
-            if(!$stmt->bind_param($types,...$inserts)){
-                throw new Exception('Binding error');
+            if (!$stmt) {
+                throw new DbException('Statement not established');
+            } elseif (!$stmt->bind_param($types, ...$inserts)) {
+                throw new DbException('Binding error');
             }
-        } catch (Exception $e){
-            DbOps::formatError('Declarative issue with '. implode(',',$inserts));
+            $stmt->execute();
+        } catch (DbException $e) {
+            DbOps::formatError($inserts, $e->getMessage());
+        } finally {
+            return self::evaluateQuery($stmt);
         }
 
-        $stmt->execute();
-        return self::evaluateQuery($stmt);
     }
 
     /**
      * @param $sql
+     *
      * @return array
+     * @throws DbException
      */
     public static function preparedQuery($sql){
         if(!empty($exclusions = DbOps::getExclusions())){
@@ -209,9 +224,14 @@ class Db {
 
     /**
      * @param $resObj
+     *
      * @return array
+     * @throws DbException
      */
     private static function evaluateQuery($resObj){
+        if (!$resObj) {
+            throw new DbException('Unable to evaluate results');
+        }
         return [
             'result'=>$resObj->get_result(),
             'affected_rows'=>$resObj->affected_rows,
@@ -228,10 +248,10 @@ class Db {
     public static function data($sql, $type = 'query') {
         self::deprecationWarning();
         return Deprecated::data($sql,$type);
-	}
+    }
 
     /**
-     * @return \mysqli
+     * @return mysqli
      */
     public static function raw(){
         return self::connect();
@@ -239,18 +259,27 @@ class Db {
 
     /**
      * @param $sql
-     * @return array
+     *
+     * @return array|void
+     * @throws DbException
      */
     public static function query($sql) {
-		$db = self::connect();
-        mysqli_report(MYSQLI_REPORT_STRICT);
         try{
-            $query = $db->query($sql);
-        } catch (\mysqli_sql_exception $e){
-            throw $e;
+            $db = self::connect();
+            if (is_array($db)) {
+                throw new DbException('Connection error');
+            }
+            if (!$query = $db->query($sql)) {
+                throw new DbException('Failed to execute query!');
+            }
+        } catch (mysqli_sql_exception $e) {
+            DbOps::formatError([], $e->getMessage(), $sql);
+
+        } catch (DbException $e) {
+            DbOps::formatError([], $e->getMessage(), $sql);
         }
-		return array('result' => $query, 'link' => $db);
-	}
+        return array('result' => $query, 'link' => $db);
+    }
 
     /**
      * @param $sql
@@ -261,7 +290,7 @@ class Db {
         mysqli_report(MYSQLI_REPORT_STRICT);
         try{
             $query = self::connect()->multi_query($sql);
-        } catch (\mysqli_sql_exception $e){
+        } catch (mysqli_sql_exception $e) {
             throw $e;
         }
         return array('result' => $query, 'link' => self::$_db);
@@ -271,17 +300,26 @@ class Db {
      *
      */
     private static function connect() {
-		if(!self::$_db) {
-			self::$_db = new \mysqli(db_host, db_user, db_password,db_name);
+        mysqli_report(MYSQLI_REPORT_STRICT);
+        if(!self::$_db) {
+            try {
+                self::$_db = new mysqli(db_host, db_user, db_password, db_name);
+            } catch (mysqli_sql_exception $e) {
+                return DbOps::formatError(['****'], 'Check defines! Can\'t connect to db');
+            }
+
             self::$_db->set_charset('utf-8');
         }
-		return self::$_db;
-	}
+
+        return self::$_db;
+    }
 
     /**
-     * @param $path
+     * @param      $path
      * @param null $fields
+     *
      * @return array
+     * @throws DbException
      */
     private static function smartQuery($path, $fields = null) {
         $rest = substr($path,1);
@@ -294,70 +332,77 @@ class Db {
             $filePath .= $parts[0] . '/' . $file . '.sql';
             $sql = file_get_contents(path . $filePath);
         }
-		if(!empty($fields)) {
+        if(!empty($fields)) {
             $sql = preg_replace_callback('/\{\{([a-zA-Z_]+)\}\}/',function($hit) use ($fields){
                 if(!isset($fields[$hit[1]])){
-                    var_dump('Required field missing');
-                    die();
+                    DbOps::formatError($hit, 'Required field missing: ' . $hit[1]);
                 }
                 DbOps::addExclusion($fields[$hit[1]],'s');
                 return '?';
             },$sql);
-		}
-		return self::handleResults($sql);
+        }
+        return self::handleResults($sql);
 
-	}
+    }
 
     /**
-     * @param $table
+     * @param      $table
      * @param null $fields
      * @param null $where
+     *
      * @return mixed
+     * @throws DbException
      */
     private static function smartSelect($table, $fields = null, $where = null) {
-		$additional = '';
-		if(is_array($table)){
-			$additional = DbCallFunctions::calls($table);
-			$table = $table['from'];
-		}
-		$fieldsString = self::handleSelectandi($fields);
-		$whereString = self::handleConditions($where);
-		$whereString .= $additional;
-		$sql = 'SELECT ' . $fieldsString . ' FROM ' . $table . ' ' .$whereString;
-		return self::handleResults($sql);
-	}
+        $additional = '';
+        if(is_array($table)){
+            $additional = DbCallFunctions::calls($table);
+            $table = $table['from'];
+        }
+        $fieldsString = self::handleSelectandi($fields);
+        $whereString = self::handleConditions($where);
+        $whereString .= $additional;
+        $sql = 'SELECT ' . $fieldsString . ' FROM ' . $table . ' ' .$whereString;
+        return self::handleResults($sql);
+    }
 
     /**
      * @param $table
      * @param $fields
      * @param $where
+     *
      * @return mixed
+     * @throws DbException
      */
     private static function smartUpdate($table, $fields, $where) {
         $fieldsString = self::setFields($fields);
-		$whereString = self::handleConditions($where);
+        $whereString = self::handleConditions($where);
         $sql = 'UPDATE '. $table . ' SET ' . $fieldsString . $whereString;
 
         return self::handleResults($sql);
-	}
+    }
 
     /**
      * @param $table
      * @param $fields
+     *
      * @return mixed
+     * @throws DbException
      */
     private static function smartInsert($table, $fields) {
         if(!isset($fields['id'])&&defined('db_assumes_uuid')&&db_assumes_uuid){
             $fields['id'] = self::uuid()->insertAsBinary();
         }
-		$fieldsString = self::setFields($fields);
+        $fieldsString = self::setFields($fields);
         $sql = 'INSERT INTO '. $table . ' SET ' . $fieldsString;
         return self::handleResults($sql);
-	}
+    }
 
     /**
      * @param $fields
+     *
      * @return string
+     * @throws DbException
      */
     private static function setFields($fields){
         $fieldsString = '';
@@ -375,14 +420,14 @@ class Db {
      * @return array|mixed
      */
     public static function escape($inp) {
-		if(is_array($inp))
-			return array_map(__METHOD__, $inp);
+        if(is_array($inp))
+            return array_map(__METHOD__, $inp);
 
-		if(!empty($inp) && is_string($inp)) {
-			return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $inp);
-		}
-		return $inp;
-	}
+        if(!empty($inp) && is_string($inp)) {
+            return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $inp);
+        }
+        return $inp;
+    }
 
 
     private static function deprecationWarning(){
@@ -392,8 +437,9 @@ class Db {
         trigger_error($msg,E_USER_NOTICE);
     }
 
+
     /**
-     * @param string $what
+     * Sets debugging to highest mode: query will not be executed
      */
     public static function debug() {
         define('db_hard_debug',true);
@@ -404,7 +450,7 @@ class Db {
      * @return string
      */
     public static function secureJson($json){
-	    return '{ = "' . addslashes($json) . '" }';
+        return '{ = "' . addslashes($json) . '" }';
     }
 
     /**

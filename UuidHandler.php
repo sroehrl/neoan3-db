@@ -15,6 +15,10 @@ class UuidHandler {
         return $this->newUuid();
     }
 
+    /**
+     * @return $this
+     * @throws DbException
+     */
     public function newUuid(){
         $q = Db::query('SELECT REPLACE(UUID(),"-","") as id');
 
