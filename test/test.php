@@ -2,7 +2,7 @@
 namespace Test;
 define('path',dirname(dirname(__FILE__)));
 define('db_host','localhost');
-define('db_name', 'production');
+define('db_name', 'test');
 define('db_user','root');
 define('db_password','');
 
@@ -21,7 +21,8 @@ use Neoan3\Apps\DbException;
 use Neoan3\Apps\DbOps;
 
 $id = Db::uuid();
-
+/*$someId = Db::easy('user_department.id',['old_id'=>1]);
+$test = Db::delete('user_department',$someId[0]['id'],true);*/
 
 // debug
 // db::debug();
@@ -56,13 +57,13 @@ $id = Db::uuid();
 //$test = Db::ask('>SELECT * FROM user WHERE password = {{password}}',['password'=>123456]);
 
 // easy
-try {
+/*try {
 
     $test = Db::easy('user.* user.id', ['delete_dates' => '.']);
 } catch (DbException $e) {
     var_dump($e->getMessage());
     die();
-}
+}*/
 
 // data (deprecated)
 /*$test = Db::data('SELECT * FROM user')['data'];

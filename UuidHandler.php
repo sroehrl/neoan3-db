@@ -47,7 +47,7 @@ class UuidHandler {
         foreach ($resultArray as $i => $item){
             if(is_numeric($i)){
                 $resultArray[$i] = $this->convertBinaryResults($item);
-            } else {
+            } elseif(is_string($item)) {
                 if(DbOps::isBinary($item)){
                     $resultArray[$i] = strtoupper(bin2hex($item));
                 }

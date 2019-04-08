@@ -1,4 +1,5 @@
 <?php
+
 namespace Neoan3\Apps;
 
 use mysqli;
@@ -12,9 +13,12 @@ use mysqli_stmt;
  * db_user (e.g. root)
  * db_name (e.g. my_db)
  * db_password (e.g. WSLDOH32hj)
- * The following defines are optional
+ *
+ * The following defines are optional:
  * db_assumes_uuid (if defined && true, will assume BINARY(16) id-fields and react accordingly)
+ * db_dev_errors (if defined && true, will output used SQl in errors & exceptions)
  * db_file_location (if defined, will overwrite the default "component"- expectation for SQL-files)
+ *
  * @package Neoan3\Apps
  */
 class Db {
@@ -35,17 +39,19 @@ class Db {
      * @throws DbException
      */
     public static function ask($param1, $param2 = null, $param3 = null) {
-        if(is_array($param1)){
+        if(is_array($param1)) {
             return self::smartSelect($param1, $param2, $param3);
         } else {
-            switch(substr($param1,0,1)){
+            switch(substr($param1, 0, 1)) {
                 case '>':
-                case '/': return self::smartQuery($param1, $param2);
+                case '/':
+                    return self::smartQuery($param1, $param2);
                     break;
-                case '?': return self::smartSelect(substr($param1, 1), $param2, $param3);
+                case '?':
+                    return self::smartSelect(substr($param1, 1), $param2, $param3);
                     break;
                 default:
-                    if(is_array($param3)){
+                    if(is_array($param3)) {
                         return self::smartUpdate($param1, $param2, $param3);
                     } else {
                         return self::smartInsert($param1, $param2);
@@ -55,14 +61,37 @@ class Db {
     }
 
     /**
+     * @param      $table
+     * @param      $id
+     * @param bool $hard
+     *
+     * @return array|int|mixed
+     * @throws DbException
+     */
+    public static function delete($table, $id, $hard = false) {
+        if($hard) {
+            $sql = '>DELETE FROM ' . Db::escape($table) . ' WHERE id =';
+        } else {
+            $sql = '>UPDATE ' . Db::escape($table) . ' SET delete_date = NOW() WHERE id =';
+        }
+        if(defined('db_assumes_uuid') && db_assumes_uuid) {
+            $sql .= 'UNHEX({{id}})';
+        } else {
+            $sql .= '{{id}}';
+        }
+        return db::ask($sql, ['id' => $id]);
+    }
+
+    /**
      * @param $fields
+     *
      * @return string
      */
-    private static function handleSelectandi($fields){
+    private static function handleSelectandi($fields) {
         $i = 0;
         $res = '';
-        foreach ($fields as $what){
-            $res .= ($i>0?', ':''). DbOps::selectandi($what);
+        foreach($fields as $what) {
+            $res .= ($i > 0 ? ', ' : '') . DbOps::selectandi($what);
             $i++;
         }
         return $res;
@@ -77,34 +106,34 @@ class Db {
      * @return mixed
      * @throws DbException
      */
-    public static function easy($selectorString, $conditionArray=array(), $callFunctions=array(), $output='data'){
+    public static function easy($selectorString, $conditionArray = [], $callFunctions = [], $output = 'data') {
         $qStr = 'SELECT ';
-        $selects = explode(' ',$selectorString);
+        $selects = explode(' ', $selectorString);
         $qStr .= self::handleSelectandi($selects);
 
         $qStr .= ' FROM ';
         $remember = false;
-        $joined = array();
-        foreach ($selects as $what){
-            $table = explode('.',trim($what));
-            $table = preg_replace('/[^a-zA-Z_]/','',$table[0]);
-            if($remember && $remember != $table && !in_array($table,$joined)){
-                $qStr .= ' JOIN ' . $table . ' ON ' . $remember .'.id = '. $table.'.'.$remember.'_id ';
-                array_push($joined,$table);
+        $joined = [];
+        foreach($selects as $what) {
+            $table = explode('.', trim($what));
+            $table = preg_replace('/[^a-zA-Z_]/', '', $table[0]);
+            if($remember && $remember != $table && !in_array($table, $joined)) {
+                $qStr .= ' JOIN ' . $table . ' ON ' . $remember . '.id = ' . $table . '.' . $remember . '_id ';
+                array_push($joined, $table);
             } elseif(!$remember) {
                 $qStr .= $table;
                 $remember = $table;
             }
         }
-        if(!empty($conditionArray)){
+        if(!empty($conditionArray)) {
             $qStr .= self::handleConditions($conditionArray);
         }
-        if(!empty($callFunctions)){
-            foreach ($callFunctions as $callFunction=> $arguments){
-                $qStr .= DbCallFunctions::$callFunction($arguments) ."\n";
+        if(!empty($callFunctions)) {
+            foreach($callFunctions as $callFunction => $arguments) {
+                $qStr .= DbCallFunctions::$callFunction($arguments) . "\n";
             }
         }
-        if($output=='debug'){
+        if($output == 'debug') {
             return $qStr;
         }
         return self::handleResults($qStr);
@@ -117,15 +146,15 @@ class Db {
      * @return string
      * @throws DbException
      */
-    private static function handleConditions($conditionArray){
-        $return ='';
+    private static function handleConditions($conditionArray) {
+        $return = '';
         $i = 0;
-        foreach ($conditionArray as $key => $value) {
-            if(is_numeric($key)){
-                $key = substr($value,1);
+        foreach($conditionArray as $key => $value) {
+            if(is_numeric($key)) {
+                $key = substr($value, 1);
             }
-            $val = DbOps::operandi($value,false,$key);
-            $return .= ($i > 0 ? "  AND " : ' WHERE ') . $key .  $val;
+            $val = DbOps::operandi($value, false, $key);
+            $return .= ($i > 0 ? "  AND " : ' WHERE ') . $key . $val;
             $i++;
         }
         return $return;
@@ -137,17 +166,16 @@ class Db {
      * @return array|int
      * @throws DbException
      */
-    public static function handleResults($qStr){
-        if(defined('db_hard_debug')){
+    public static function handleResults($qStr) {
+        if(defined('db_hard_debug')) {
             return [
-                'sql'=>$qStr,
-                'exclusions'=>DbOps::getExclusions()
+                'sql' => $qStr, 'exclusions' => DbOps::getExclusions()
             ];
         }
         $result = [];
-        if($exe =  self::preparedQuery($qStr)){
-            if($exe['result']){
-                while ($row = $exe['result']->fetch_assoc()){
+        if($exe = self::preparedQuery($qStr)) {
+            if($exe['result']) {
+                while($row = $exe['result']->fetch_assoc()) {
                     $result[] = $row;
                 }
                 $exe['result']->free();
@@ -156,15 +184,15 @@ class Db {
             }
         }
         DbOps::clearExclusions();
-        if(!defined('db_assumes_uuid')|| !db_assumes_uuid){
-            if(self::$_db->insert_id >0){
+        if(!defined('db_assumes_uuid') || !db_assumes_uuid) {
+            if(self::$_db->insert_id > 0) {
                 return self::$_db->insert_id;
             }
-        } elseif(!empty($result)){
+        } elseif(!empty($result)) {
             $handler = new UuidHandler();
             $result = $handler->convertBinaryResults($result);
         }
-        if(self::$_db->affected_rows >0 && empty($result)){
+        if(self::$_db->affected_rows > 0 && empty($result)) {
             return self::$_db->affected_rows;
         }
         return $result;
@@ -176,28 +204,28 @@ class Db {
      * @return mysqli_stmt
      * @throws DbException
      */
-    public static function prepareStmt($sql){
+    public static function prepareStmt($sql) {
         $db = self::connect();
         return $db->prepare($sql);
     }
 
     /**
      * @param mysqli_stmt $stmt
-     * @param $types
-     * @param $inserts
+     * @param             $types
+     * @param             $inserts
      *
      * @return array
      * @throws DbException
      */
-    public static function executeStmt($stmt, $types, $inserts){
+    public static function executeStmt($stmt, $types, $inserts) {
         try {
-            if (!$stmt) {
+            if(!$stmt) {
                 throw new DbException('Statement not established');
-            } elseif (!$stmt->bind_param($types, ...$inserts)) {
+            } elseif(!$stmt->bind_param($types, ...$inserts)) {
                 throw new DbException('Binding error');
             }
             $stmt->execute();
-        } catch (DbException $e) {
+        } catch(DbException $e) {
             DbOps::formatError($inserts, $e->getMessage());
         } finally {
             return self::evaluateQuery($stmt);
@@ -211,16 +239,16 @@ class Db {
      * @return array
      * @throws DbException
      */
-    public static function preparedQuery($sql){
-        if(!empty($exclusions = DbOps::getExclusions())){
+    public static function preparedQuery($sql) {
+        if(!empty($exclusions = DbOps::getExclusions())) {
             $prepared = self::prepareStmt($sql);
             $inserts = [];
             $types = '';
-            foreach ($exclusions as $i=> $substitute){
+            foreach($exclusions as $i => $substitute) {
                 $types .= $substitute['type'];
                 $inserts[] = $substitute['value'];
             }
-            return self::executeStmt($prepared,$types,$inserts);
+            return self::executeStmt($prepared, $types, $inserts);
         } else {
             return self::query($sql);
         }
@@ -232,33 +260,32 @@ class Db {
      * @return array
      * @throws DbException
      */
-    private static function evaluateQuery($resObj){
-        if (!$resObj) {
+    private static function evaluateQuery($resObj) {
+        if(!$resObj) {
             throw new DbException('Unable to evaluate results');
         }
         return [
-            'result'=>$resObj->get_result(),
-            'affected_rows'=>$resObj->affected_rows,
-            'insert_id'=>$resObj->num_rows,
-            'errno'=>$resObj->errno
+            'result'    => $resObj->get_result(), 'affected_rows' => $resObj->affected_rows,
+            'insert_id' => $resObj->num_rows, 'errno' => $resObj->errno
         ];
     }
 
     /**
-     * @param $sql
+     * @param        $sql
      * @param string $type
+     *
      * @return array
      */
     public static function data($sql, $type = 'query') {
         self::deprecationWarning();
-        return Deprecated::data($sql,$type);
+        return Deprecated::data($sql, $type);
     }
 
     /**
      * @return mysqli
      * @throws DbException
      */
-    public static function raw(){
+    public static function raw() {
         return self::connect();
     }
 
@@ -269,21 +296,21 @@ class Db {
      * @throws DbException
      */
     public static function query($sql) {
-        try{
+        try {
             $db = self::connect();
-            if (is_array($db)) {
+            if(is_array($db)) {
                 throw new DbException('Connection error');
             }
-            if (!$query = $db->query($sql)) {
+            if(!$query = $db->query($sql)) {
                 throw new DbException('Failed to execute query!');
             }
-        } catch (mysqli_sql_exception $e) {
+        } catch(mysqli_sql_exception $e) {
             DbOps::formatError([], $e->getMessage(), $sql);
 
-        } catch (DbException $e) {
+        } catch(DbException $e) {
             DbOps::formatError([], $e->getMessage(), $sql);
         }
-        if (isset($query) && isset($db)) {
+        if(isset($query) && isset($db)) {
             return ['result' => $query, 'link' => $db];
         }
     }
@@ -297,12 +324,12 @@ class Db {
     public static function multi_query($sql) {
         self::connect();
         mysqli_report(MYSQLI_REPORT_STRICT);
-        try{
+        try {
             $query = self::connect()->multi_query($sql);
-        } catch (mysqli_sql_exception $e) {
+        } catch(mysqli_sql_exception $e) {
             throw $e;
         }
-        return array('result' => $query, 'link' => self::$_db);
+        return ['result' => $query, 'link' => self::$_db];
     }
 
     /**
@@ -313,7 +340,7 @@ class Db {
         if(!self::$_db) {
             try {
                 self::$_db = new mysqli(db_host, db_user, db_password, db_name);
-            } catch (mysqli_sql_exception $e) {
+            } catch(mysqli_sql_exception $e) {
                 DbOps::formatError(['****'], 'Check defines! Can\'t connect to db');
             }
 
@@ -331,24 +358,26 @@ class Db {
      * @throws DbException
      */
     private static function smartQuery($path, $fields = null) {
-        $rest = substr($path,1);
-        if(substr($path,0,1)=='>'){
+        $rest = substr($path, 1);
+        if(substr($path, 0, 1) == '>') {
             $sql = $rest;
         } else {
-            $parts = explode('/',$rest);
-            $file = isset($parts[1])?$parts[1]:$parts[0];
-            $filePath = '/'.(defined('db_file_location')?db_file_location:'component').'/';
+            $parts = explode('/', $rest);
+            $file = isset($parts[1]) ? $parts[1] : $parts[0];
+            $filePath = '/' . (defined('db_file_location') ? db_file_location : 'component') . '/';
             $filePath .= $parts[0] . '/' . $file . '.sql';
             $sql = file_get_contents(path . $filePath);
         }
         if(!empty($fields)) {
-            $sql = preg_replace_callback('/\{\{([a-zA-Z_]+)\}\}/',function($hit) use ($fields){
-                if(!isset($fields[$hit[1]])){
+            $sql = preg_replace_callback(
+                '/\{\{([a-zA-Z_]+)\}\}/', function($hit) use ($fields) {
+                if(!isset($fields[$hit[1]])) {
                     DbOps::formatError($hit, 'Required field missing: ' . $hit[1]);
                 }
-                DbOps::addExclusion($fields[$hit[1]],'s');
+                DbOps::addExclusion($fields[$hit[1]], 's');
                 return '?';
-            },$sql);
+            }, $sql
+            );
         }
         return self::handleResults($sql);
 
@@ -364,14 +393,14 @@ class Db {
      */
     private static function smartSelect($table, $fields = null, $where = null) {
         $additional = '';
-        if(is_array($table)){
+        if(is_array($table)) {
             $additional = DbCallFunctions::calls($table);
             $table = $table['from'];
         }
         $fieldsString = self::handleSelectandi($fields);
         $whereString = self::handleConditions($where);
         $whereString .= $additional;
-        $sql = 'SELECT ' . $fieldsString . ' FROM ' . $table . ' ' .$whereString;
+        $sql = 'SELECT ' . $fieldsString . ' FROM ' . $table . ' ' . $whereString;
         return self::handleResults($sql);
     }
 
@@ -386,7 +415,7 @@ class Db {
     private static function smartUpdate($table, $fields, $where) {
         $fieldsString = self::setFields($fields);
         $whereString = self::handleConditions($where);
-        $sql = 'UPDATE '. $table . ' SET ' . $fieldsString . $whereString;
+        $sql = 'UPDATE ' . $table . ' SET ' . $fieldsString . $whereString;
 
         return self::handleResults($sql);
     }
@@ -399,11 +428,11 @@ class Db {
      * @throws DbException
      */
     private static function smartInsert($table, $fields) {
-        if(!isset($fields['id'])&&defined('db_assumes_uuid')&&db_assumes_uuid){
+        if(!isset($fields['id']) && defined('db_assumes_uuid') && db_assumes_uuid) {
             $fields['id'] = self::uuid()->insertAsBinary();
         }
         $fieldsString = self::setFields($fields);
-        $sql = 'INSERT INTO '. $table . ' SET ' . $fieldsString;
+        $sql = 'INSERT INTO ' . $table . ' SET ' . $fieldsString;
         return self::handleResults($sql);
     }
 
@@ -413,11 +442,11 @@ class Db {
      * @return string
      * @throws DbException
      */
-    private static function setFields($fields){
+    private static function setFields($fields) {
         $fieldsString = '';
         $i = 0;
         foreach($fields as $key => $val) {
-            $fieldsString .= ($i > 0 ? ",\n  " : '') . $key . DbOps::operandi($val, true,true);
+            $fieldsString .= ($i > 0 ? ",\n  " : '') . $key . DbOps::operandi($val, true, true);
             $i++;
         }
         return $fieldsString;
@@ -426,24 +455,28 @@ class Db {
 
     /**
      * @param $inp
+     *
      * @return array|mixed
      */
     public static function escape($inp) {
-        if(is_array($inp))
+        if(is_array($inp)) {
             return array_map(__METHOD__, $inp);
+        }
 
         if(!empty($inp) && is_string($inp)) {
-            return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $inp);
+            return str_replace(
+                ['\\', "\0", "\n", "\r", "'", '"', "\x1a"], ['\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'], $inp
+            );
         }
         return $inp;
     }
 
 
-    private static function deprecationWarning(){
+    private static function deprecationWarning() {
         $caller = next(debug_backtrace());
-        $msg = 'Deprecated function Db::data in function '.$caller['function'].' called from '.$caller['file'];
-        $msg .= ' on line '.$caller['line'];
-        trigger_error($msg,E_USER_NOTICE);
+        $msg = 'Deprecated function Db::data in function ' . $caller['function'] . ' called from ' . $caller['file'];
+        $msg .= ' on line ' . $caller['line'];
+        trigger_error($msg, E_USER_NOTICE);
     }
 
 
@@ -451,14 +484,15 @@ class Db {
      * Sets debugging to highest mode: query will not be executed
      */
     public static function debug() {
-        define('db_hard_debug',true);
+        define('db_hard_debug', true);
     }
 
     /**
      * @param $json
+     *
      * @return string
      */
-    public static function secureJson($json){
+    public static function secureJson($json) {
         return '{ = "' . addslashes($json) . '" }';
     }
 
@@ -466,7 +500,7 @@ class Db {
      * @return UuidHandler
      * @throws DbException
      */
-    public static function uuid(){
+    public static function uuid() {
         return new UuidHandler();
     }
 
