@@ -69,11 +69,13 @@ class Db {
     }
 
     /**
-     * @param $selectorString
-     * @param array $conditionArray
-     * @param array $callFunctions
+     * @param        $selectorString
+     * @param array  $conditionArray
+     * @param array  $callFunctions
      * @param string $output
+     *
      * @return mixed
+     * @throws DbException
      */
     public static function easy($selectorString, $conditionArray=array(), $callFunctions=array(), $output='data'){
         $qStr = 'SELECT ';
@@ -107,6 +109,7 @@ class Db {
         }
         return self::handleResults($qStr);
     }
+
 
     /**
      * @param $conditionArray
@@ -171,6 +174,7 @@ class Db {
      * @param $sql
      *
      * @return mysqli_stmt
+     * @throws DbException
      */
     public static function prepareStmt($sql){
         $db = self::connect();
@@ -178,7 +182,7 @@ class Db {
     }
 
     /**
-     * @param $stmt
+     * @param mysqli_stmt $stmt
      * @param $types
      * @param $inserts
      *
@@ -223,7 +227,7 @@ class Db {
     }
 
     /**
-     * @param $resObj
+     * @param mysqli_stmt $resObj
      *
      * @return array
      * @throws DbException
@@ -252,6 +256,7 @@ class Db {
 
     /**
      * @return mysqli
+     * @throws DbException
      */
     public static function raw(){
         return self::connect();
@@ -278,12 +283,16 @@ class Db {
         } catch (DbException $e) {
             DbOps::formatError([], $e->getMessage(), $sql);
         }
-        return array('result' => $query, 'link' => $db);
+        if (isset($query) && isset($db)) {
+            return ['result' => $query, 'link' => $db];
+        }
     }
 
     /**
      * @param $sql
+     *
      * @return array
+     * @throws DbException
      */
     public static function multi_query($sql) {
         self::connect();
@@ -297,7 +306,7 @@ class Db {
     }
 
     /**
-     *
+     * @throws DbException
      */
     private static function connect() {
         mysqli_report(MYSQLI_REPORT_STRICT);
@@ -305,7 +314,7 @@ class Db {
             try {
                 self::$_db = new mysqli(db_host, db_user, db_password, db_name);
             } catch (mysqli_sql_exception $e) {
-                return DbOps::formatError(['****'], 'Check defines! Can\'t connect to db');
+                DbOps::formatError(['****'], 'Check defines! Can\'t connect to db');
             }
 
             self::$_db->set_charset('utf-8');
@@ -455,6 +464,7 @@ class Db {
 
     /**
      * @return UuidHandler
+     * @throws DbException
      */
     public static function uuid(){
         return new UuidHandler();

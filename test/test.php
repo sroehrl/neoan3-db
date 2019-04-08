@@ -2,19 +2,22 @@
 namespace Test;
 define('path',dirname(dirname(__FILE__)));
 define('db_host','localhost');
-define('db_name','michael');
+define('db_name', 'production');
 define('db_user','root');
 define('db_password','');
 
 //optional
 define('db_assumes_uuid',true);
+define('db_dev_errors', true);
 
 require_once path . '/Db.php';
 require_once path . '/DbOps.php';
 require_once path . '/UuidHandler.php';
 require_once path . '/Deprecated.php';
+require_once path . '/DbException.php';
 
 use Neoan3\Apps\Db;
+use Neoan3\Apps\DbException;
 use Neoan3\Apps\DbOps;
 
 $id = Db::uuid();
@@ -53,7 +56,13 @@ $id = Db::uuid();
 //$test = Db::ask('>SELECT * FROM user WHERE password = {{password}}',['password'=>123456]);
 
 // easy
-$test = Db::easy('user.* $user.id:id',['password'=>'!']);
+try {
+
+    $test = Db::easy('user.* user.id', ['delete_dates' => '.']);
+} catch (DbException $e) {
+    var_dump($e->getMessage());
+    die();
+}
 
 // data (deprecated)
 /*$test = Db::data('SELECT * FROM user')['data'];

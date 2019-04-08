@@ -8,11 +8,26 @@
 
 namespace Neoan3\Apps;
 
+use mysqli_stmt;
 
 class UuidHandler {
     public $uuid;
+
+    /**
+     * UuidHandler constructor.
+     * @throws DbException
+     */
     function __construct() {
-        return $this->newUuid();
+        try {
+            if (!$id = $this->newUuid()) {
+                throw new DbException();
+            }
+
+        } catch (DbException $e) {
+            DbOps::formatError(['connection'], 'Cannot create UUID: Connection failed.');
+        } finally {
+            return $this->newUuid();
+        }
     }
 
     /**
@@ -27,6 +42,7 @@ class UuidHandler {
         }
         return $this;
     }
+
     public function convertBinaryResults($resultArray){
         foreach ($resultArray as $i => $item){
             if(is_numeric($i)){
@@ -39,6 +55,7 @@ class UuidHandler {
         }
         return $resultArray;
     }
+
     public function convertToCompliantUuid($uuid=false){
         $id = ($uuid?$uuid:$this->uuid);
         $arr = [8,13,18,23];
@@ -47,13 +64,16 @@ class UuidHandler {
         }
         return $id;
     }
+
     public function insertAsBinary($uuid=false){
         return '{ = '.$this->unhexUuid($uuid).' }';
     }
+
     private function unhexUuid($uuid=false){
 
         return 'UNHEX("'.($uuid?$uuid:$this->uuid).'")';
     }
+
     private function hexUuid($newUuid=false){
         return  'HEX('.($newUuid?'UUID()':'"'.$this->uuid.'"').')';
     }
