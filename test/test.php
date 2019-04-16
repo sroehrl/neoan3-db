@@ -15,6 +15,7 @@ require_once path . '/DbOps.php';
 require_once path . '/UuidHandler.php';
 require_once path . '/Deprecated.php';
 require_once path . '/DbException.php';
+require_once path . '/DbEnvironment.php';
 
 use Neoan3\Apps\Db;
 use Neoan3\Apps\DbException;
