@@ -17,18 +17,26 @@ class DbOps {
      * @var array
      */
     private static $preparedExclusions = [];
+    /**
+     * @var DbEnvironment
+     */
+    private static $_env;
+
+    function __construct($env) {
+        self::$_env = $env;
+    }
 
     /**
      * @return array
      */
-    static function getExclusions(){
+    public function getExclusions() {
         return self::$preparedExclusions;
     }
 
     /**
      *
      */
-    static function clearExclusions(){
+    public function clearExclusions() {
         self::$preparedExclusions = [];
     }
 
@@ -36,8 +44,8 @@ class DbOps {
      * @param $value
      * @param $type
      */
-    static function addExclusion($value, $type){
-        self::$preparedExclusions[] = self::prepareBinding($value,$type);
+    public function addExclusion($value, $type) {
+        self::$preparedExclusions[] = $this->prepareBinding($value, $type);
     }
 
     /**
@@ -45,7 +53,7 @@ class DbOps {
      * @param $type
      * @return array
      */
-    static function prepareBinding($value, $type){
+    public function prepareBinding($value, $type) {
         return ['type'=>$type,'value'=>$value];
     }
 
@@ -57,7 +65,7 @@ class DbOps {
      * @return array|bool|string
      * @throws DbException
      */
-    static function operandi($string, $set = false, $prepared = false) {
+    public function operandi($string, $set = false, $prepared = false) {
         if(empty($string) && $string !== "0") {
             return ($set ? ' = NULL' : ' IS NULL');
         }
@@ -75,7 +83,7 @@ class DbOps {
                 $rest = substr($string, 1);
                 if($prepared){
                     $return = ' = UNHEX(?)';
-                    self::addExclusion($rest,'s');
+                    $this->addExclusion($rest, 's');
                 } else {
                     $return = ' = UNHEX("'.$rest.'")';
                 }
@@ -83,12 +91,14 @@ class DbOps {
             case '!':
                 if(strtolower($string) == '!null' || strlen($string) == 1){
                     if($set){
-                        self::formatError([$string], 'Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"');
+                        $this->formatError(
+                            [$string], 'Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"'
+                        );
                     }
                     $return = ' IS NOT NULL ';
                 } else {
                     if($set){
-                        self::formatError([$string], 'Cannot use "!= ' . substr($string, 1) . '" to set a value');
+                        $this->formatError([$string], 'Cannot use "!= ' . substr($string, 1) . '" to set a value');
                     }
                     $return = ' != "' . substr($string, 1) . '"';
                 }
@@ -104,7 +114,7 @@ class DbOps {
                     $return = ($set ? ' = NULL' : ' IS NULL');
                 } elseif($prepared){
                     $return = ' = ? ';
-                    self::addExclusion($string,'s');
+                    $this->addExclusion($string, 's');
                 } else {
                     $return = ' = "'. Db::escape($string) . '"';
                 }
@@ -117,26 +127,26 @@ class DbOps {
      * @param $string
      * @return string
      */
-    static function selectandi($string){
+    public function selectandi($string) {
         $firstLetter = strtolower(substr($string, 0, 1));
         $rest = substr($string, 1);
         switch($firstLetter) {
             case '#':
-                $return = 'UNIX_TIMESTAMP(' . self::cleanAs($rest) . ')*1000';
+                $return = 'UNIX_TIMESTAMP(' . $this->cleanAs($rest) . ')*1000';
                 break;
             case '$':
-                $return = 'HEX(' . self::cleanAs($rest) . ')';
+                $return = 'HEX(' . $this->cleanAs($rest) . ')';
                 break;
             default:
                 $return = $string;
         }
-        return $return . self::checkAs($string);
+        return $return . $this->checkAs($string);
     }
     /**
      * @param $rest
      * @return string
      */
-    static function checkAs($rest){
+    public function checkAs($rest) {
         if(empty($rest) || $rest == '' || strpos($rest,'*')!== false){
             // catch asterix-selector
             return '';
@@ -157,7 +167,7 @@ class DbOps {
      * @param $rest
      * @return mixed
      */
-    static function cleanAs($rest){
+    public function cleanAs($rest) {
         $as = explode(':',$rest);
         $als = explode('.',$rest);
         if(count($as)>1){
@@ -177,9 +187,9 @@ class DbOps {
      *
      * @throws DbException
      */
-    static function formatError($values, $msg, $sql = false) {
+    public function formatError($values, $msg, $sql = false) {
         $format = $msg . ' Given values: ' . implode(', ', $values);
-        if (defined('db_dev_errors') && db_dev_errors && $sql) {
+        if(self::$_env->get('dev_errors') && $sql) {
             $format .= ' SQL: ' . $sql;
         }
 
@@ -190,7 +200,7 @@ class DbOps {
      * @param $str
      * @return bool
      */
-    static function isBinary($str) {
+    public function isBinary($str) {
         return preg_match('~[^\x20-\x7E\t\r\n]~', $str) > 0;
     }
 }
