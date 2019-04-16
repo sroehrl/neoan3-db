@@ -20,7 +20,29 @@ $test = Db::ask('>NOW() as now');
 
 ```
 
-See test/test.php for a quick guide.
+## Quick Start
+
+```PHP
+...
+
+// SELECT name FROM user WHERE id = 1
+$user = Db::easy('user.name',['id'=>1]);
+
+/*
+*    $user: [0=>['name'=>'Adam']]
+*/
+
+// INSERT INTO user(name,email) VALUES('Sam','sam@sam.example')
+$insert = ['name'=>'Sam','email'=>'sam@sam.example'];
+$newId = Db::ask('user',$insert);
+
+// UPDATE user SET name = 'Sam', email = 'sam@sam.example' WHERE id = 1
+$insert = ['name'=>'Sam','email'=>'sam@sam.example'];
+Db::ask('user',$insert,['id'=>1]);
+
+```
+
+See test/test.php for some more quick start examples.
 
 ### Expects the following defines
 
