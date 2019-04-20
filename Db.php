@@ -378,7 +378,6 @@ class Db {
             }
             self::$_env->bindMysqli(self::$_db);
         }
-        var_dump(self::$_env->get('user'));
         return self::$_db;
 
     }
