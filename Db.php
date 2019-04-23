@@ -88,10 +88,11 @@ class Db {
      */
     public static function delete($table, $id, $hard = false) {
         self::init();
+        $table = self::$_ops->addBackticks(self::sanitizeKey($table));
         if($hard) {
-            $sql = '>DELETE FROM ' . Db::escape($table) . ' WHERE id =';
+            $sql = '>DELETE FROM ' . $table . ' WHERE `id` =';
         } else {
-            $sql = '>UPDATE ' . Db::escape($table) . ' SET delete_date = NOW() WHERE id =';
+            $sql = '>UPDATE ' . $table . ' SET `delete_date` = NOW() WHERE `id` =';
         }
         if(self::$_env->get('assumes_uuid')) {
             $sql .= 'UNHEX({{id}})';
@@ -299,6 +300,10 @@ class Db {
     }
 
     /**
+     * DEPRECATED
+     *
+     * Use ask-syntax instead
+     *
      * @param        $sql
      * @param string $type
      *
@@ -541,28 +546,25 @@ class Db {
     }
 
     /**
+     * DEPRECATED
+     *
+     * NeoanPHP2.x users: handling JSON&HTML escaping now completely moved out of DB-app
+     * in favor of a single-responsibility approach
+     *
      * @param $inp
      *
      * @return array|mixed
      */
     public static function escape($inp) {
         self::init();
-        if(is_array($inp)) {
-            return array_map(__METHOD__, $inp);
-        }
-
-        if(!empty($inp) && is_string($inp)) {
-            return str_replace(
-                ['\\', "\0", "\n", "\r", "'", '"', "\x1a"], ['\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'], $inp
-            );
-        }
-        return $inp;
+        self::deprecationWarning();
+        return Deprecated::escape($inp);
     }
 
 
     private static function deprecationWarning() {
         $caller = next(debug_backtrace());
-        $msg = 'Deprecated function Db::data in function ' . $caller['function'] . ' called from ' . $caller['file'];
+        $msg = 'Deprecated Db-function in function ' . $caller['function'] . ' called from ' . $caller['file'];
         $msg .= ' on line ' . $caller['line'];
         trigger_error($msg, E_USER_NOTICE);
     }

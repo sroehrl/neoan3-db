@@ -116,7 +116,7 @@ class DbOps {
                     $return = ' = ? ';
                     $this->addExclusion($string, 's');
                 } else {
-                    $return = ' = "'. Db::escape($string) . '"';
+                    $return = ' = "' . $string . '"';
                 }
                 break;
         }
