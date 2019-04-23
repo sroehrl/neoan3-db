@@ -6,13 +6,31 @@ neoan3 app for mysqli connectivity
 `composer require neoan3-apps/db`
 
 ```PHP
-use Neoan3\Apps\Db;
-define('db_host','localhost');
-define('db_name','yourDB');
-define('db_user','root');
-define('db_password','Pwd');
 
-$test = Db::ask('>NOW() as now'); 
+require dirname(__FILE__).'/vendor/autoload.php'
+
+use Neoan3\Apps\Db;
+
+Db::setEnvironment([
+    'name' => 'your_db',
+    'user' => 'root',
+    'password' => 'Som3S3cur3Pa55word'
+])
+
+/*
+*    OR per defines:
+*    define('db_host','localhost');
+*    define('db_name','yourDB');
+*    define('db_user','root');
+*    define('db_password','Som3S3cur3Pa55word');
+*/
+
+try {
+    $test = Db::ask('>NOW() as now'); 
+} catch(DbExeption $e){
+    die($e->getMessage());
+}
+
 
 /*
 *    $test: [0=>['now'=>'2019-01-01 12:12:12']]
@@ -44,18 +62,32 @@ Db::ask('user',$insert,['id'=>1]);
 
 See test/test.php for some more quick start examples.
 
-### Expects the following defines
+### Environment variable
 
-| Define | |
-|--------|--------|
-|db_host | usually "localhost" |
-|db_name | Name of your database |
-|db_user | Name of db-user |
-|db_password | Password for user db_user |
-| db_assumes_uuid | (optional) If true, the app auto-generates uuids |
-| db_file_location | (optional)* |
+| Define | | Default |
+|--------|--------|--------|
+| db_host | usually "localhost" | 'localhost' |
+| db_name | Name of your database | not set / required |
+| db_user | Name of db-user | 'root' |
+| db_password | Password for user db_user | '' (empty) |
+| db_assumes_uuid | If true, the app auto-generates uuids | false |
+| db_app_root | Will read the define 'path' if neoan3 is used  | /parent/of/vendor/folder/ |
+| db_file_location | folder of SQL-files relative to app_root  | 'component' |
+| db_filter_characters | filters table-names & array-keys  | '/[^a-zA-Z\_\\^\\.\s]/' |
 
-\*If not set, assumes "component" as a root-folder for sql-files. Only set this if you are NOT using neoan3.
+Environment variables can either be set as global constants or using Db::setEnvironment()
+
+```PHP
+/*
+* When using Db::setEnvironment() the prepended 'db_' is ommitted.
+*/
+
+// set single variable:
+Db::setEnvironment('name','test_db');
+
+// set multiple variables:
+Db::setEnvironment(['name'=>'test_db','password'=>'FooBar']);
+```
 
  We recommend defining these values in your frame when using neoan3.
 
@@ -73,7 +105,7 @@ As such, the following assumptions are made for best usability (auto-joins etc.)
 ## Getting started
 ### Db::easy($selectorString [, $conditionArray, $callFunctions, $debug])
 The easy-function converts a string into a prepared statement and executes it.
-It returns an array of associative arrays.
+It returns an array of associative arrays. The easy-markup is a simplified selector-string representing your database-structure.
 
 | example | SQL |
 | --- | --- |
@@ -100,13 +132,14 @@ It returns an array of associative arrays.
 SELECT * FROM user WHERE CONCAT_WS(' ',first_name,last_name) LIKE {{name}}
 ```
 
-With the ANY-action, SQL can be managed in editor-friendly formats. The locator expects the neoan3 folder component and understands to following format:
+With the ANY-action, SQL can be managed in editor-friendly formats. 
+By default, the locator expects the neoan3 folder "component" (see Environment variables) and understands to following format:
 
-/[file] = '/component/[file]/[file].sql' (like above)
+/[file] = '/[db_file_location]/[file]/[file].sql' (like above)
 
 or deeper variations like:
 
-/[folder]/[file] = '/component/[folder]/[file].sql'
+/[folder]/[file] = '/[db_file_location]/[folder]/[file].sql'
 
 There are no considerations to be made regarding order of parameters. Naming of the target using curly brackets will ensure that only matching array keys are used.
 

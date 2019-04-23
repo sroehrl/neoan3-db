@@ -8,16 +8,19 @@ use mysqli_stmt;
 
 /**
  * Class Db
- * The following defines as used and required
+ * The following variables as used and required
  * db_host (e.g. localhost)
  * db_user (e.g. root)
  * db_name (e.g. my_db)
  * db_password (e.g. WSLDOH32hj)
+ * db_app_root (e.g. __DIR__)
  *
- * The following defines are optional:
+ * The following variables are optional:
  * db_assumes_uuid (if defined && true, will assume BINARY(16) id-fields and react accordingly)
  * db_dev_errors (if defined && true, will output used SQl in errors & exceptions)
  * db_file_location (if defined, will overwrite the default "component"- expectation for SQL-files)
+ * db_charset (if defined, will overwrite the default "utf8mb4" assumption)
+ * db_filter_characters (if defined, will overwrite the default value "/[^a-zA-Z\_\^\.\s]/" )
  *
  * @package Neoan3\Apps
  */
@@ -433,6 +436,7 @@ class Db {
      * @throws DbException
      */
     private static function smartQuery($path, $fields = null) {
+        $root = self::$_env->get('app_root');
         $rest = substr($path, 1);
         if(substr($path, 0, 1) == '>') {
             $sql = $rest;
@@ -441,7 +445,7 @@ class Db {
             $file = isset($parts[1]) ? $parts[1] : $parts[0];
             $filePath = '/' . self::$_env->get('file_location') . '/';
             $filePath .= $parts[0] . '/' . $file . '.sql';
-            $sql = file_get_contents(path . $filePath);
+            $sql = file_get_contents($root . $filePath);
         }
         if(!empty($fields)) {
             $sql = preg_replace_callback(
@@ -534,14 +538,14 @@ class Db {
      * Sanitizes table-names and keys
      *
      * Default executed regex is [^a-zA-Z\_\^\.\s] and can be modified through
-     * DbEnvironment::set('allowed_key_characters',$regex)
+     * DbEnvironment::set('filter_characters',$regex)
      *
      * @param $keyString
      *
      * @return string|string[]|null
      */
     public static function sanitizeKey($keyString) {
-        $pattern = self::$_env->get('allowed_key_characters');
+        $pattern = self::$_env->get('filter_characters');
         return preg_replace($pattern, '', $keyString);
     }
 
