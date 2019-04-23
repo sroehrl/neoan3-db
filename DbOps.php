@@ -128,19 +128,34 @@ class DbOps {
      * @return string
      */
     public function selectandi($string) {
+        $string = Db::sanitizeKey($string);
         $firstLetter = strtolower(substr($string, 0, 1));
         $rest = substr($string, 1);
         switch($firstLetter) {
             case '#':
-                $return = 'UNIX_TIMESTAMP(' . $this->cleanAs($rest) . ')*1000';
+                $return = 'UNIX_TIMESTAMP(' . $this->addBackticks($this->cleanAs($rest)) . ')*1000';
                 break;
             case '$':
-                $return = 'HEX(' . $this->cleanAs($rest) . ')';
+                $return = 'HEX(' . $this->addBackticks($this->cleanAs($rest)) . ')';
                 break;
             default:
-                $return = $string;
+                $return = $this->addBackticks($string);
         }
         return $return . $this->checkAs($string);
+    }
+
+    public function addBackticks($string) {
+        $parts = explode('.', $string);
+        $result = '';
+        foreach($parts as $i => $part) {
+            $result .= ($i > 0 ? '.' : '');
+            if($part !== '*') {
+                $result .= '`' . $part . '`';
+            } else {
+                $result .= $part;
+            }
+        }
+        return $result;
     }
     /**
      * @param $rest

@@ -170,11 +170,12 @@ class Db {
         $return = '';
         $i = 0;
         foreach($conditionArray as $key => $value) {
+            $key = self::sanitizeKey($key);
             if(is_numeric($key)) {
-                $key = substr($value, 1);
+                $key = self::$_ops->addBackticks(substr($value, 1));
             }
             $val = self::$_ops->operandi($value, false, $key);
-            $return .= ($i > 0 ? "  AND " : ' WHERE ') . $key . $val;
+            $return .= ($i > 0 ? "  AND " : ' WHERE ') . self::$_ops->addBackticks($key) . $val;
             $i++;
         }
         return $return;
@@ -190,7 +191,7 @@ class Db {
         self::init();
         if(defined('db_hard_debug')) {
             return [
-                'sql' => $qStr,
+                'sql'        => $qStr,
                 'exclusions' => self::$_ops->getExclusions()
             ];
         }
@@ -290,8 +291,10 @@ class Db {
             throw new DbException('Unable to evaluate results');
         }
         return [
-            'result'    => $resObj->get_result(), 'affected_rows' => $resObj->affected_rows,
-            'insert_id' => $resObj->num_rows, 'errno' => $resObj->errno
+            'result'        => $resObj->get_result(),
+            'affected_rows' => $resObj->affected_rows,
+            'insert_id'     => $resObj->num_rows,
+            'errno'         => $resObj->errno
         ];
     }
 
@@ -395,10 +398,26 @@ class Db {
         self::$_env->setCharset($charset);
     }
 
-    public static function setEnvironment($property, $value) {
+    /**
+     * set Environment variable(s)
+     *
+     * @param array|string $property
+     * @param bool|string  $value
+     *
+     * @throws DbException
+     */
+    public static function setEnvironment($property, $value = false) {
         self::init();
         self::$_db = null;
-        self::$_env->set($property, $value);
+        if(is_array($property)) {
+            foreach($property as $prop => $val) {
+                self::$_env->set($prop, $val);
+            }
+        } elseif($value) {
+            self::$_env->set($property, $value);
+        } else {
+            throw new DbException('setEnvironment is not set properly.');
+        }
     }
 
     /**
@@ -448,10 +467,11 @@ class Db {
             $additional = DbCallFunctions::calls($table);
             $table = $table['from'];
         }
+        $table = self::sanitizeKey($table);
         $fieldsString = self::handleSelectandi($fields);
         $whereString = self::handleConditions($where);
         $whereString .= $additional;
-        $sql = 'SELECT ' . $fieldsString . ' FROM ' . $table . ' ' . $whereString;
+        $sql = 'SELECT ' . $fieldsString . ' FROM ' . self::$_ops->addBackticks($table) . ' ' . $whereString;
         return self::handleResults($sql);
     }
 
@@ -464,9 +484,10 @@ class Db {
      * @throws DbException
      */
     private static function smartUpdate($table, $fields, $where) {
+        $table = self::sanitizeKey($table);
         $fieldsString = self::setFields($fields);
         $whereString = self::handleConditions($where);
-        $sql = 'UPDATE ' . $table . ' SET ' . $fieldsString . $whereString;
+        $sql = 'UPDATE ' . self::$_ops->addBackticks($table) . ' SET ' . $fieldsString . $whereString;
 
         return self::handleResults($sql);
     }
@@ -479,11 +500,12 @@ class Db {
      * @throws DbException
      */
     private static function smartInsert($table, $fields) {
+        $table = self::sanitizeKey($table);
         if(!isset($fields['id']) && self::$_env->get('assumes_uuid')) {
             $fields['id'] = self::uuid()->insertAsBinary();
         }
         $fieldsString = self::setFields($fields);
-        $sql = 'INSERT INTO ' . $table . ' SET ' . $fieldsString;
+        $sql = 'INSERT INTO ' . self::$_ops->addBackticks($table) . ' SET ' . $fieldsString;
         return self::handleResults($sql);
     }
 
@@ -503,6 +525,20 @@ class Db {
         return $fieldsString;
     }
 
+    /**
+     * Sanitizes table-names and keys
+     *
+     * Default executed regex is [^a-zA-Z\_\^\.\s] and can be modified through
+     * DbEnvironment::set('allowed_key_characters',$regex)
+     *
+     * @param $keyString
+     *
+     * @return string|string[]|null
+     */
+    public static function sanitizeKey($keyString) {
+        $pattern = self::$_env->get('allowed_key_characters');
+        return preg_replace($pattern, '', $keyString);
+    }
 
     /**
      * @param $inp
