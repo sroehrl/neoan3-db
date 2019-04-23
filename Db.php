@@ -474,7 +474,7 @@ class Db {
         }
         $table = self::sanitizeKey($table);
         $fieldsString = self::handleSelectandi($fields);
-        $whereString = self::handleConditions($where);
+        $whereString = !empty($where) ? self::handleConditions($where) : '';
         $whereString .= $additional;
         $sql = 'SELECT ' . $fieldsString . ' FROM ' . self::$_ops->addBackticks($table) . ' ' . $whereString;
         return self::handleResults($sql);
