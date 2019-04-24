@@ -172,6 +172,43 @@ These modifiers should be used with the "as-declaration"
 |`Db::easy('#user.insert_date:inserted')`| `SELECT UNIX_TIMESTAMP(user.insert_date)*1000 as inserted FROM user`|
 |`Db::easy('user.* $user.id:id')` | `SELECT *, HEX(id) as id FROM user`|
 
+## Db-easy markup
+
+Let's face it: most of the time our queries are rather simple.
+Whenever we need more complex queries, there will always come the point of realizing that pure SQL would be easier to read 
+than endlessly encapsulated arrays. This is where using Db::ask's "any"-actions come into play.
+
+Db::easy does not target these scenarios, but rather specializes in the ever-day retrieval of a particular set of data.
+The selected columns are written in one single string.
+
+### Selecting multiple columns from a table
+Multiple columns of one table are separated by a space:
+
+```PHP
+// SELECT first_name, last_name FROM user
+
+Db::easy('user.first_name user.last_name');
+```
+
+### Simple joins
+Joins are generated based on the order of the occurrence in the string from left to right, respecting the first used table as the "master".
+Easy can only perform JOINS if the recommended db structure is used.
+This means that foreign keys must be in the format "master"_id.
+
+```PHP
+// SELECT 
+//   user.first_name, 
+//   user.last_name, 
+//   user_email.email, 
+//   user_password.confirm_date
+// FROM user 
+// JOIN user_email ON user_email.user_id = user.id
+// JOIN user_password ON user_password.user_id = user.id
+
+Db::easy('user.first_name user.last_name user_email.email user_password.confirm_date');
+```
+
+
 ## Heads up
 The general approach of the db-app has been applied for years. While the difference to common wrappers for mysqli of pdo seems rather big,
 developers are usually surprised of the low learning-curve and possibilities for faster development it offers.
