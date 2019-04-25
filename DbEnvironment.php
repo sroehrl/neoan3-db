@@ -36,7 +36,7 @@ class DbEnvironment {
             'db_charset'           => defined('db_charset') ? db_charset : 'utf8mb4',
             'db_filter_characters' => defined(
                 'db_filter_characters'
-            ) ? db_filter_characters : '/[^a-zA-Z\_\^\.\s]/',
+            ) ? db_filter_characters : '/[^a-zA-Z\_\^\.\s\*]/',
         ];
         return $this;
     }
