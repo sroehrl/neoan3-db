@@ -141,8 +141,10 @@ class Db {
         foreach($selects as $what) {
             $table = explode('.', trim($what));
             $table = preg_replace('/[^a-zA-Z_]/', '', $table[0]);
+            $table = self::$_ops->addBackticks($table);
             if($remember && $remember != $table && !in_array($table, $joined)) {
-                $qStr .= ' JOIN ' . $table . ' ON ' . $remember . '.id = ' . $table . '.' . $remember . '_id ';
+                $qStr .= ' JOIN ' . $table . ' ON ' . $remember . '.`id` = ' . $table . '.' . substr($remember, 0, -1) .
+                         '_id` ';
                 array_push($joined, $table);
             } elseif(!$remember) {
                 $qStr .= $table;
@@ -528,7 +530,8 @@ class Db {
         $fieldsString = '';
         $i = 0;
         foreach($fields as $key => $val) {
-            $fieldsString .= ($i > 0 ? ",\n  " : '') . $key . self::$_ops->operandi($val, true, true);
+            $fieldsString .= ($i > 0 ? ",\n  " : '') . self::$_ops->addBackticks($key) .
+                             self::$_ops->operandi($val, true, true);
             $i++;
         }
         return $fieldsString;

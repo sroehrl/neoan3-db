@@ -169,12 +169,12 @@ class DbOps {
         $as = explode(':',$rest);
         $als = explode('.',$rest);
         if(count($as)>1){
-            return ' as '.$as[1];
+            return ' as "' . $as[1] . '"';
         } elseif (count($als)>1){
-            return ' as '.$als[1];
+            return ' as "' . $als[1] . '"';
         } else {
 
-            return ' as '. preg_replace('/[^a-zA-Z_]/','',$rest);
+            return ' as "' . preg_replace('/[^a-zA-Z_]/', '', $rest) . '"';
         }
     }
 
