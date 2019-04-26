@@ -165,7 +165,6 @@ class DbOps {
      * @return string
      */
     public function checkAs($rest) {
-        var_dump($rest);
         if(empty($rest) || $rest == '' || strpos($rest,'*')!== false){
             // catch asterix-selector
             return '';
