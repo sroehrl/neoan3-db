@@ -73,7 +73,7 @@ See test/test.php for some more quick start examples.
 | db_assumes_uuid | If true, the app auto-generates uuids | false |
 | db_app_root | Will read the define 'path' if neoan3 is used  | /parent/of/vendor/folder/ |
 | db_file_location | folder of SQL-files relative to app_root  | 'component' |
-| db_filter_characters | filters table-names & array-keys  | '/[^a-zA-Z\_\\^\\.\s]/' |
+| db_filter_characters | filters table-names & array-keys  | '/[^a-zA-Z\_\\^\\.\s\*]/' |
 
 Environment variables can either be set as global constants or using Db::setEnvironment()
 
