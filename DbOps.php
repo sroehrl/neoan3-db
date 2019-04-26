@@ -166,7 +166,7 @@ class DbOps {
      */
     public function checkAs($rest) {
         if(empty($rest) || $rest == '' || strpos($rest,'*')!== false){
-            // catch asterix-selector
+            // catch asterisk-selector
             return '';
         }
         $as = explode(':',$rest);
