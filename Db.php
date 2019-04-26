@@ -176,10 +176,10 @@ class Db {
         $return = '';
         $i = 0;
         foreach($conditionArray as $key => $value) {
-            $key = self::sanitizeKey($key);
             if(is_numeric($key)) {
                 $key = self::$_ops->addBackticks(substr($value, 1));
             }
+            $key = self::sanitizeKey($key);
             $val = self::$_ops->operandi($value, false, $key);
             $return .= ($i > 0 ? "  AND " : ' WHERE ') . self::$_ops->addBackticks($key) . $val;
             $i++;
