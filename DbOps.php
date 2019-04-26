@@ -218,7 +218,7 @@ class DbOps {
      * @param $str
      * @return bool
      */
-    public function isBinary($str) {
+    public static function isBinary($str) {
         return preg_match('~[^\x20-\x7E\t\r\n]~', $str) > 0;
     }
 }
