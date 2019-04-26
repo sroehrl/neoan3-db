@@ -144,7 +144,7 @@ class DbOps {
     }
 
     private function _sanitizeAndAddBackticks($string) {
-        $this->addBackticks(Db::sanitizeKey($string));
+        return $this->addBackticks(Db::sanitizeKey($string));
     }
 
     public function addBackticks($string) {
