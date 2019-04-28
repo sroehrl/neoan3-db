@@ -44,7 +44,10 @@ class DbOps {
      * @param $value
      * @param $type
      */
-    public function addExclusion($value, $type) {
+    public function addExclusion($value, $type = '') {
+        if ($type == '') {
+            $type = $this->mysqliStmtType($value);
+        }
         self::$preparedExclusions[] = $this->prepareBinding($value, $type);
     }
 
@@ -114,7 +117,7 @@ class DbOps {
                     $return = ($set ? ' = NULL' : ' IS NULL');
                 } elseif($prepared){
                     $return = ' = ? ';
-                    $this->addExclusion($string, 's');
+                    $this->addExclusion($string);
                 } else {
                     $return = ' = "' . $string . '"';
                 }
@@ -212,6 +215,20 @@ class DbOps {
         }
 
         throw new DbException($format);
+    }
+
+    /**
+     * @param $value
+     *
+     * @return string
+     */
+    public function mysqliStmtType($value) {
+        $value = trim($value);
+        if (!preg_match('/[^0-9\.]/', $value) && substr($value, 0, 1) != 0) {
+            // d or i?
+            return ctype_digit($value) ? 'i' : 'd';
+        }
+        return 's';
     }
 
     /**

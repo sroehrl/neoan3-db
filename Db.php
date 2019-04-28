@@ -455,7 +455,7 @@ class Db {
                 if(!isset($fields[$hit[1]])) {
                     self::$_ops->formatError($hit, 'Required field missing: ' . $hit[1]);
                 }
-                self::$_ops->addExclusion($fields[$hit[1]], 's');
+                self::$_ops->addExclusion($fields[$hit[1]]);
                 return '?';
             }, $sql
             );
