@@ -423,7 +423,7 @@ class Db {
             foreach($property as $prop => $val) {
                 self::$_env->set($prop, $val);
             }
-        } elseif($value) {
+        } elseif ($value !== false) {
             self::$_env->set($property, $value);
         } else {
             throw new DbException('setEnvironment is not set properly.');
