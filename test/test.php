@@ -21,20 +21,32 @@ use Neoan3\Apps\Db;
 use Neoan3\Apps\DbException;
 use Neoan3\Apps\DbOps;
 
-$id = Db::uuid();
-Db::debug();
-$someId = Db::easy('user_department.id', ['old_id' => 1]);
-$test = Db::delete('user_department', $someId[0]['id'], true);
+
+try {
+    $id = Db::uuid();
+} catch (DbException $e) {
+    var_dump($e->getMessage());
+    die();
+}
+
+//Db::debug();
+
 
 // debug
 // db::debug();
 
 // ask insert uuid
-/*$test = Db::ask('user',[
-    'id'=>'$'.$id->uuid,
-    'username'=>'neoan_1',
-    'password'=>'123456'
-]);*/
+try {
+    $test = Db::ask('user', [
+        'id' => '$' . $id->uuid,
+        'username' => 'neoan_1',
+        'password' => '123456'
+    ]);
+} catch (DbException $e) {
+    var_dump($e->getMessage());
+    die();
+}
+
 
 // ask insert a_i
 /*try{

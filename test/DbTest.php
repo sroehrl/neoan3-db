@@ -28,7 +28,7 @@ class DbTest extends TestCase {
      */
 
     /**
-     * @throws \Neoan3\Apps\DbException
+     * @throws DbException
      */
     public function testEasySimple() {
         $try = Db::easy('user.id');
@@ -36,7 +36,7 @@ class DbTest extends TestCase {
     }
 
     /**
-     * @throws \Neoan3\Apps\DbException
+     * @throws DbException
      */
     public function testEasyWhere() {
         $try = Db::easy('user.id', ['^delete_date']);
@@ -46,7 +46,7 @@ class DbTest extends TestCase {
     }
 
     /**
-     * @throws \Neoan3\Apps\DbException
+     * @throws DbException
      */
     public function testEasySelectandi() {
         $try = Db::easy('#user.insert_date:inserted $user.id:someId');
@@ -54,7 +54,7 @@ class DbTest extends TestCase {
     }
 
     /**
-     * @throws \Neoan3\Apps\DbException
+     * @throws DbException
      */
     public function testEasyOperandi() {
         $data = Db::easy('user.id', [], ['limit' => [0, 1]]);
@@ -67,24 +67,34 @@ class DbTest extends TestCase {
      * ASK block
      */
 
+    /**
+     * @throws DbException
+     */
     public function testAskAnyFile() {
         Db::setEnvironment('file_location', '');
         $try = Db::ask('/test', ['key' => 1]);
         $this->assertTrue(isset($try[0]['test']));
     }
 
+    /**
+     * @throws DbException
+     */
     public function testAskAnyInline() {
         $try = Db::ask('>SELECT id as test FROM user WHERE id != {{key}}', ['key' => 1]);
         $this->assertTrue(isset($try[0]['test']));
     }
 
+
+    /**
+     * @throws DbException
+     */
     public function testAskUpdate() {
         $try = Db::ask('user', ['delete_date' => '.'], ['^delete_date']);
         $this->assertIsInt($try);
     }
 
     /**
-     * @throws \Neoan3\Apps\DbException
+     * @throws DbException
      */
     public function testUuid() {
         $id = Db::uuid()->uuid;
@@ -96,7 +106,7 @@ class DbTest extends TestCase {
      */
     public function testException() {
         $this->expectException(DbException::class);
-        $t = db::easy('user.notset');
+        db::easy('user.notset');
     }
 
 }
