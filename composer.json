@@ -5,7 +5,8 @@
   "license": "MIT",
   "require": {
     "php": "^7.0",
-    "ext-mysqli": "*"
+    "ext-mysqli": "*",
+    "ext-ctype": "*"
   },
   "authors": [
     {

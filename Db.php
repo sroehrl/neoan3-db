@@ -201,14 +201,15 @@ class Db {
                 'exclusions' => self::$_ops->getExclusions()
             ];
         }
-        $result = [];
+        $result = 0;
         if($exe = self::preparedQuery($qStr)) {
-            if($exe['result']) {
+            if ($exe['result'] && !is_bool($exe['result'])) {
+                $result = [];
                 while($row = $exe['result']->fetch_assoc()) {
                     $result[] = $row;
                 }
                 $exe['result']->free();
-            } else {
+            } elseif (!$exe['result']) {
                 $result = $exe;
             }
         }
@@ -423,7 +424,7 @@ class Db {
             foreach($property as $prop => $val) {
                 self::$_env->set($prop, $val);
             }
-        } elseif($value) {
+        } elseif ($value !== false) {
             self::$_env->set($property, $value);
         } else {
             throw new DbException('setEnvironment is not set properly.');
@@ -455,7 +456,7 @@ class Db {
                 if(!isset($fields[$hit[1]])) {
                     self::$_ops->formatError($hit, 'Required field missing: ' . $hit[1]);
                 }
-                self::$_ops->addExclusion($fields[$hit[1]], 's');
+                self::$_ops->addExclusion($fields[$hit[1]]);
                 return '?';
             }, $sql
             );
