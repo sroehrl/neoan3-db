@@ -17,7 +17,11 @@ class DbEnvironment {
      */
     private $_db;
 
+    /**
+     * @var array
+     */
     private $envVariables;
+
 
     /**
      * DbEnvironment constructor.
@@ -41,7 +45,10 @@ class DbEnvironment {
         return $this;
     }
 
-    function bindMysqli($mysqli) {
+    /**
+     * @param $mysqli
+     */
+    public function bindMysqli($mysqli) {
         $this->_db = $mysqli;
     }
 
@@ -50,16 +57,27 @@ class DbEnvironment {
      *
      * @return object
      */
-    function setCharset($charset) {
+    public function setCharset($charset) {
         $this->_db->set_charset($charset);
         return $this->_db->get_charset();
     }
 
-    function set($property, $value) {
+    /**
+     * @param $property
+     * @param $value
+     */
+    public function set($property, $value) {
         $this->envVariables['db_' . $property] = $value;
     }
 
-    function get($var) {
+    /**
+     * Get environment variable
+     *
+     * @param $var
+     *
+     * @return mixed
+     */
+    public function get($var) {
         return $this->envVariables['db_' . $var];
     }
 

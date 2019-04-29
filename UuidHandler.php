@@ -8,29 +8,46 @@
 
 namespace Neoan3\Apps;
 
-use mysqli_stmt;
 
+/**
+ * Class UuidHandler
+ *
+ * @package Neoan3\Apps
+ */
 class UuidHandler {
+    /**
+     * @var
+     */
     public $uuid;
+    /**
+     * @var DbOps
+     */
+    static $_ops;
 
     /**
      * UuidHandler constructor.
+     *
+     * @param DbOps $ops
+     *
      * @throws DbException
      */
-    function __construct() {
+    function __construct($ops) {
+        self::$_ops = $ops;
         try {
             if (!$id = $this->newUuid()) {
                 throw new DbException();
             }
 
         } catch (DbException $e) {
-            DbOps::formatError(['connection'], 'Cannot create UUID: Connection failed.');
+            self::$_ops->formatError(['connection'], 'Cannot create UUID: Connection failed.');
         } finally {
             return $this->newUuid();
         }
     }
 
     /**
+     * Generates new UUID
+     *
      * @return $this
      * @throws DbException
      */
@@ -43,6 +60,13 @@ class UuidHandler {
         return $this;
     }
 
+    /**
+     * handles binary to hex conversion
+     *
+     * @param $resultArray
+     *
+     * @return mixed
+     */
     public function convertBinaryResults($resultArray){
         foreach ($resultArray as $i => $item){
             if(is_numeric($i)){
@@ -56,26 +80,52 @@ class UuidHandler {
         return $resultArray;
     }
 
+    /**
+     * Converts short UUIDs to RFC 4122 conform format
+     *
+     * @param bool $uuid
+     *
+     * @return bool|mixed
+     */
     public function convertToCompliantUuid($uuid=false){
         $id = ($uuid?$uuid:$this->uuid);
-        $arr = [8,13,18,23];
+        $arr = [8, 13, 18, 23];
         foreach ($arr as $part){
             $id = substr_replace($id, '-', $part, 0);
         }
         return $id;
     }
 
+    /**
+     * Converts to binary
+     *
+     * @param bool $uuid
+     *
+     * @return string
+     */
     public function insertAsBinary($uuid=false){
-        return '{ = '.$this->unhexUuid($uuid).' }';
+        return '{ = ' . $this->unhexUuid($uuid) . ' }';
     }
 
+    /**
+     * converts from binary to hex
+     *
+     * @param bool $uuid
+     *
+     * @return string
+     */
     private function unhexUuid($uuid=false){
 
-        return 'UNHEX("'.($uuid?$uuid:$this->uuid).'")';
+        return 'UNHEX("' . ($uuid?$uuid:$this->uuid) . '")';
     }
 
+    /**
+     * @param bool $newUuid
+     *
+     * @return string
+     */
     private function hexUuid($newUuid=false){
-        return  'HEX('.($newUuid?'UUID()':'"'.$this->uuid.'"').')';
+        return 'HEX(' . ($newUuid?'UUID()': '"' . $this->uuid . '"') . ')';
     }
 
 }

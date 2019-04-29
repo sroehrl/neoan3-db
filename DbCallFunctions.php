@@ -9,30 +9,47 @@
 namespace Neoan3\Apps;
 
 
+use Countable;
+
 /**
  * Class DbCallFunctions
+ *
  * @package Neoan3\Apps
  */
 class DbCallFunctions {
     /**
      * @param $array
+     *
      * @return string
      */
-    static function calls($array){
-        if(is_countable($array)&&count($array) > 1) {
+    static function calls($array) {
+        $return = '';
+        if(is_countable($array) && count($array) > 1) {
             array_shift($array);
             foreach($array as $key => $value) {
                 $func = $key;
-                return self::$func($value);
+                $return .= self::$func($value);
             }
         }
-        return '';
+        return $return;
     }
+
+    /**
+     * @param $function
+     * @param $arguments
+     *
+     * @return mixed
+     */
+    static function call($function, $arguments) {
+        return self::$function($arguments);
+    }
+
     /**
      * @param $array
+     *
      * @return string
      */
-     static function orderBy($array) {
+    private static function orderBy($array) {
         $origin = $array;
         if(count($array) > 1) {
             self::calls(array_shift($array));
@@ -42,30 +59,33 @@ class DbCallFunctions {
 
     /**
      * @param $array
+     *
      * @return string
      */
-     static function groupBy($array) {
+    private static function groupBy($array) {
         $origin = $array;
         if(count($array) > 1) {
             self::calls(array_shift($array));
         }
-        return ' GROUP BY ' . $origin[0] . (intval($origin[1])>0?', ' . $origin[1]:'');
+        return ' GROUP BY ' . $origin[0] . (intval($origin[1]) > 0 ? ', ' . $origin[1] : '');
     }
 
     /**
      * @param $array
+     *
      * @return string
      */
-     static function limit($array) {
+    private static function limit($array) {
         $origin = $array;
         if(count($array) > 1) {
             self::calls(array_shift($array));
         }
-        return ' LIMIT ' . $origin[0] . (intval($origin[1])>0?', ' . $origin[1]:'');
+        return ' LIMIT ' . $origin[0] . (intval($origin[1]) > 0 ? ', ' . $origin[1] : '');
     }
 }
+
 // Polyfill for PHP<7.3
-if (!function_exists('is_countable')) {
+if(!function_exists('is_countable')) {
     function is_countable($var) {
         return (is_array($var) || $var instanceof Countable);
     }

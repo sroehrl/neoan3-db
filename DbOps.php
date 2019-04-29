@@ -22,6 +22,11 @@ class DbOps {
      */
     private static $_env;
 
+    /**
+     * DbOps constructor.
+     *
+     * @param $env
+     */
     function __construct($env) {
         self::$_env = $env;
     }
@@ -29,14 +34,14 @@ class DbOps {
     /**
      * @return array
      */
-    public function getExclusions() {
+    protected function getExclusions() {
         return self::$preparedExclusions;
     }
 
     /**
-     *
+     * clears Exclusions
      */
-    public function clearExclusions() {
+    protected function clearExclusions() {
         self::$preparedExclusions = [];
     }
 
@@ -44,7 +49,7 @@ class DbOps {
      * @param $value
      * @param $type
      */
-    public function addExclusion($value, $type = '') {
+    protected function addExclusion($value, $type = '') {
         if ($type == '') {
             $type = $this->mysqliStmtType($value);
         }
@@ -56,11 +61,13 @@ class DbOps {
      * @param $type
      * @return array
      */
-    public function prepareBinding($value, $type) {
+    private function prepareBinding($value, $type) {
         return ['type'=>$type,'value'=>$value];
     }
 
     /**
+     * EASY markup interpretation to influence conditions-behavior
+     *
      * @param      $string
      * @param bool $set
      * @param bool $prepared
@@ -68,7 +75,7 @@ class DbOps {
      * @return array|bool|string
      * @throws DbException
      */
-    public function operandi($string, $set = false, $prepared = false) {
+    protected function operandi($string, $set = false, $prepared = false) {
         if(empty($string) && $string !== "0") {
             return ($set ? ' = NULL' : ' IS NULL');
         }
@@ -127,10 +134,13 @@ class DbOps {
     }
 
     /**
+     * EASY markup interpretation to influence select-behavior
+     *
      * @param $string
+     *
      * @return string
      */
-    public function selectandi($string) {
+    protected function selectandi($string) {
         $firstLetter = strtolower(substr($string, 0, 1));
         $rest = substr($string, 1);
         switch($firstLetter) {
@@ -146,11 +156,25 @@ class DbOps {
         return $return . $this->checkAs($string);
     }
 
+    /**
+     * Shorthand for sanitizing and adding backticks
+     *
+     * @param $string
+     *
+     * @return string
+     */
     private function _sanitizeAndAddBackticks($string) {
         return $this->addBackticks(Db::sanitizeKey($string));
     }
 
-    public function addBackticks($string) {
+    /**
+     * Adds backticks to keys, tables & columns
+     *
+     * @param $string
+     *
+     * @return string
+     */
+    protected function addBackticks($string) {
         $parts = explode('.', $string);
         $result = '';
         foreach($parts as $i => $part) {
@@ -167,7 +191,7 @@ class DbOps {
      * @param $rest
      * @return string
      */
-    public function checkAs($rest) {
+    protected function checkAs($rest) {
         if(empty($rest) || $rest == '' || strpos($rest,'*')!== false){
             // catch asterisk-selector
             return '';
@@ -188,7 +212,7 @@ class DbOps {
      * @param $rest
      * @return mixed
      */
-    public function cleanAs($rest) {
+    protected function cleanAs($rest) {
         $as = explode(':',$rest);
         $als = explode('.',$rest);
         if(count($as)>1){
