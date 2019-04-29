@@ -201,14 +201,15 @@ class Db {
                 'exclusions' => self::$_ops->getExclusions()
             ];
         }
-        $result = [];
+        $result = 0;
         if($exe = self::preparedQuery($qStr)) {
-            if($exe['result']) {
+            if ($exe['result'] && !is_bool($exe['result'])) {
+                $result = [];
                 while($row = $exe['result']->fetch_assoc()) {
                     $result[] = $row;
                 }
                 $exe['result']->free();
-            } else {
+            } elseif (!$exe['result']) {
                 $result = $exe;
             }
         }
