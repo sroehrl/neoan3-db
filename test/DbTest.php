@@ -109,4 +109,11 @@ class DbTest extends TestCase {
         db::easy('user.notset');
     }
 
+    public function testCallFunctionsLimit() {
+        $try = Db::easy('user.id', ['^delete_date'], ['limit' => [0, 1]]);
+        $this->assertTrue(
+            empty($try) || isset($try[0])
+        );
+    }
+
 }
