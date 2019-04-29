@@ -2,7 +2,7 @@
 namespace Test;
 define('path',dirname(dirname(__FILE__)));
 define('db_host','localhost');
-define('db_name', 'test');
+define('db_name', 'db_app');
 define('db_user','root');
 define('db_password','');
 
@@ -22,8 +22,9 @@ use Neoan3\Apps\DbException;
 use Neoan3\Apps\DbOps;
 
 $id = Db::uuid();
-/*$someId = Db::easy('user_department.id',['old_id'=>1]);
-$test = Db::delete('user_department',$someId[0]['id'],true);*/
+Db::debug();
+$someId = Db::easy('user_department.id', ['old_id' => 1]);
+$test = Db::delete('user_department', $someId[0]['id'], true);
 
 // debug
 // db::debug();
