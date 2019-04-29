@@ -24,7 +24,7 @@ use mysqli_stmt;
  *
  * @package Neoan3\Apps
  */
-class Db {
+class Db extends DbOps {
     /**
      * @var
      */
@@ -156,7 +156,7 @@ class Db {
         }
         if(!empty($callFunctions)) {
             foreach($callFunctions as $callFunction => $arguments) {
-                $qStr .= DbCallFunctions::$callFunction($arguments) . "\n";
+                $qStr .= DbCallFunctions::call($callFunction, $arguments) . "\n";
             }
         }
         if($output == 'debug') {
@@ -219,7 +219,7 @@ class Db {
                 return self::$_db->insert_id;
             }
         } elseif(!empty($result)) {
-            $handler = new UuidHandler();
+            $handler = new UuidHandler(self::$_ops);
             $result = $handler->convertBinaryResults($result);
         }
         if(self::$_db->affected_rows > 0 && empty($result)) {
@@ -570,6 +570,9 @@ class Db {
     }
 
 
+    /**
+     * Creates a NOTICE
+     */
     private static function deprecationWarning() {
         $caller = next(debug_backtrace());
         $msg = 'Deprecated Db-function in function ' . $caller['function'] . ' called from ' . $caller['file'];
@@ -601,7 +604,7 @@ class Db {
      */
     public static function uuid() {
         self::init();
-        return new UuidHandler();
+        return new UuidHandler(self::$_ops);
     }
 
 }
