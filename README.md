@@ -2,6 +2,11 @@
 
 neoan3 app for mysqli connectivity
 
+- opinionated (yet configurable)
+- rapid development
+- secure (prepared statements & additional security)
+- "plug & play" in any (if any) framework
+
 ## Installation
 `composer require neoan3-apps/db`
 
