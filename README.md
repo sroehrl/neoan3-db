@@ -67,7 +67,11 @@ Db::ask('user',$insert,['id'=>1]);
 
 ```
 
-See test/test.php for some more quick start examples.
+See test/test.php for some more quick start examples and/or dive into learning:
+
+
+[![Watch the video](https://img.youtube.com/vi/2kCGESctStg/hqdefault.jpg)](https://youtu.be/2kCGESctStg)
+
 
 ### Environment variable
 
