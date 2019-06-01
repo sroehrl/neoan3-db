@@ -7,6 +7,8 @@ neoan3 app for mysqli connectivity
 - secure (prepared statements & additional security)
 - "plug & play" in any (if any) framework
 
+Designed for [neoan3](https://github.com/sroehrl/neoan3), but works as standalone
+
 ## Installation
 `composer require neoan3-apps/db`
 
