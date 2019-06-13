@@ -168,6 +168,11 @@ Common condition modifications can be applied by string-manipulation of the cond
 |`Db::easy('user.*',['id'=>'$123s..'])` | `SELECT * FROM user WHERE id = UNHEX(123s..)` (convert hex to binary)|
 |`Db::easy('user.*',['delete_date'=>'.'])` | `SELECT * FROM user WHERE delete_date = NOW()`|
 
+> But what if the value passed to an operandi starts with a modifier?
+You can prepend the modifier '=' (equal) to prevent operandi from triggering! e.g.: 
+
+>`Db::ask('password',['password'=>'='.password_hash('123456', PASSWORD_DEFAULT)])`
+
 ### Value modifiers (selectandi)
 Common value-modifications can be applied by string-manipulation of the select-statement.
 These modifiers should be used with the "as-declaration"
@@ -176,6 +181,11 @@ These modifiers should be used with the "as-declaration"
 |---|---|
 |`Db::easy('#user.insert_date:inserted')`| `SELECT UNIX_TIMESTAMP(user.insert_date)*1000 as inserted FROM user`|
 |`Db::easy('user.* $user.id:id')` | `SELECT *, HEX(id) as id FROM user`|
+
+> But what if the value passed to a selectandi starts with a modifier?
+You can prepend the modifier '=' (equal) to prevent operandi from triggering! 
+We do not provide an example as this can only happen if your column names would start with a 
+character in violation with a secure [_filter_character_](#environment-variable) setup. 
 
 ## Db-easy markup
 

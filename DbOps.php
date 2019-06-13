@@ -82,6 +82,11 @@ class DbOps {
 
         $firstLetter = strtolower(substr($string, 0, 1));
         switch($firstLetter) {
+            case '=':
+                // important! this is the first rule and needs to stay as such!
+                $return = ' = ? ';
+                $this->addExclusion($string);
+                break;
             case '>':
             case '<':
                 $return = ' ' . $firstLetter . ' "' . intval(substr($string, 1)) . '"';
@@ -144,6 +149,9 @@ class DbOps {
         $firstLetter = strtolower(substr($string, 0, 1));
         $rest = substr($string, 1);
         switch($firstLetter) {
+            case '=':
+                $return = $this->addBackticks($string);
+                break;
             case '#':
                 $return = 'UNIX_TIMESTAMP(' . $this->_sanitizeAndAddBackticks($this->cleanAs($rest)) . ')*1000';
                 break;
