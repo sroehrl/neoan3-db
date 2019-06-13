@@ -85,7 +85,7 @@ class DbOps {
             case '=':
                 // important! this is the first rule and needs to stay as such!
                 $return = ' = ? ';
-                $this->addExclusion($string);
+                $this->addExclusion(substr($string, 1));
                 break;
             case '>':
             case '<':
@@ -150,7 +150,7 @@ class DbOps {
         $rest = substr($string, 1);
         switch($firstLetter) {
             case '=':
-                $return = $this->addBackticks($string);
+                $return = $this->addBackticks(substr($string, 1));
                 break;
             case '#':
                 $return = 'UNIX_TIMESTAMP(' . $this->_sanitizeAndAddBackticks($this->cleanAs($rest)) . ')*1000';
