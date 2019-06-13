@@ -7,6 +7,8 @@ neoan3 app for mysqli connectivity
 - secure (prepared statements & additional security)
 - "plug & play" in any (if any) framework
 
+Designed for [neoan3](https://github.com/sroehrl/neoan3), but works as standalone
+
 ## Installation
 `composer require neoan3-apps/db`
 
@@ -65,7 +67,11 @@ Db::ask('user',$insert,['id'=>1]);
 
 ```
 
-See test/test.php for some more quick start examples.
+See test/test.php for some more quick start examples and/or dive into learning:
+
+
+[![Watch the video](https://img.youtube.com/vi/2kCGESctStg/hqdefault.jpg)](https://youtu.be/2kCGESctStg)
+
 
 ### Environment variable
 
