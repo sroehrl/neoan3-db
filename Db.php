@@ -51,6 +51,17 @@ class Db extends DbOps {
     }
 
     /**
+     * @param $methodName
+     * @param $arguments
+     *
+     * @return array|int|mixed
+     * @throws DbException
+     */
+    public static function __callStatic($methodName, $arguments) {
+        return self::ask($methodName, ...$arguments);
+    }
+
+    /**
      * @param      $param1
      * @param null $param2
      * @param null $param3

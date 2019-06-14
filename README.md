@@ -156,6 +156,16 @@ There are no considerations to be made regarding order of parameters. Naming of 
 
 This makes directly handling user-input save.
 
+### Magic Method Call
+
+So why does the Db::ask have such a strange name? Because the ask-function is something that you don't **have to** worry about.
+It is what happens under the hood and can be replaced by calling it using magic methods.
+
+| Ask | Using magic method call | simplified SQL logic |
+|---|---|---|
+|`Db::ask('user',['id'=>'1'])`| `Db::user(['id'=>'1'])` |`INSERT INTO user (id) VALUES(1)`|
+|`Db::ask('user',['name'=>'Sam'],['id'=>1])`| `Db::user(['name'=>'Sam'],['id'=>'1'])` |`UPDATE user SET name = "Sam" WHERE id = 1`|
+
 ### As-declaration
 Handling field-name modifications.
 
