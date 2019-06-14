@@ -9,6 +9,44 @@ neoan3 app for mysqli connectivity
 
 Designed for [neoan3](https://github.com/sroehrl/neoan3), but works as standalone
 
+## Prepared Statements
+
+All queries are performed as prepared statements, running through additional security to sanitize columns.
+ 
+> Throughout this file you will find representation of SQL-functionality that uses a simplified SQL-logic.
+These examples are **NOT** the queries actually performed by the wrapper, but meant to provide a solid understanding of
+the capabilities of this wrapper.
+
+## Quick Start
+
+### Simple SELECT
+```PHP
+// SELECT name FROM user WHERE id = 1
+// returns e.g.: [0=>['name'=>'Adam']]
+
+$user = Db::easy('user.name',['id'=>1]);
+ ```
+### Simple INSERT
+```PHP
+// INSERT INTO user(name,email) VALUES('Sam','sam@sam.example')
+
+$insert = ['name'=>'Sam','email'=>'sam@sam.example'];
+$newId = Db::user($insert);
+```
+### Simple UPDATE
+```PHP
+// UPDATE user SET name = 'Sam', email = 'sam@sam.example' WHERE id = 1
+
+$update = ['name'=>'Sam','email'=>'sam@sam.example'];
+Db::user($update, ['id'=>1]);
+```
+
+See test/test.php for some more quick start examples and/or dive into learning:
+
+
+[![Watch the video](https://img.youtube.com/vi/2kCGESctStg/hqdefault.jpg)](https://youtu.be/2kCGESctStg)
+
+
 ## Installation
 `composer require neoan3-apps/db`
 
@@ -45,32 +83,6 @@ try {
 
 ```
 
-## Quick Start
-
-```PHP
-...
-
-// SELECT name FROM user WHERE id = 1
-$user = Db::easy('user.name',['id'=>1]);
-
-/*
-*    $user: [0=>['name'=>'Adam']]
-*/
-
-// INSERT INTO user(name,email) VALUES('Sam','sam@sam.example')
-$insert = ['name'=>'Sam','email'=>'sam@sam.example'];
-$newId = Db::ask('user',$insert);
-
-// UPDATE user SET name = 'Sam', email = 'sam@sam.example' WHERE id = 1
-$insert = ['name'=>'Sam','email'=>'sam@sam.example'];
-Db::ask('user',$insert,['id'=>1]);
-
-```
-
-See test/test.php for some more quick start examples and/or dive into learning:
-
-
-[![Watch the video](https://img.youtube.com/vi/2kCGESctStg/hqdefault.jpg)](https://youtu.be/2kCGESctStg)
 
 
 ### Environment variable
