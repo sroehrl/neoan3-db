@@ -190,8 +190,8 @@ Common condition modifications can be applied by string-manipulation of the cond
 
 | Example | simplified SQL logic |
 |---|---|
-|`Db::easy('user.*',['delete_date'=>'!'])` or `db::easy('user.*',['^delete_date'])` | `SELECT * FROM user WHERE delete_date IS NOT NULL`|
-|`Db::easy('user.*',['delete_date'=>''])` | `SELECT * FROM user WHERE delete_date IS NULL`|
+|`Db::easy('user.*',['delete_date'=>'!'])` | `SELECT * FROM user WHERE delete_date IS NOT NULL`|
+|`Db::easy('user.*',['delete_date'=>''])` or `db::easy('user.*',['^delete_date'])` | `SELECT * FROM user WHERE delete_date IS NULL`|
 |`Db::easy('user.*',['age'=>'>30'])` | `SELECT * FROM user WHERE age > 30`|
 |`Db::easy('user.*',['id'=>'$123s..'])` | `SELECT * FROM user WHERE id = UNHEX(123s..)` (convert hex to binary)|
 |`Db::easy('user.*',['delete_date'=>'.'])` | `SELECT * FROM user WHERE delete_date = NOW()`|
