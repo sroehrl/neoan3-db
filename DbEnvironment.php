@@ -41,6 +41,7 @@ class DbEnvironment
             'db_dev_errors'        => defined('db_dev_errors') ? db_dev_errors : false,
             'db_charset'           => defined('db_charset') ? db_charset : 'utf8mb4',
             'db_filter_characters' => defined('db_filter_characters') ? db_filter_characters : '/[^a-zA-Z\_\^\.\s\*]/',
+            'db_casing'            => defined('db_casing') ? db_casing : 'snake',
         ];
         return $this;
     }

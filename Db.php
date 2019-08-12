@@ -162,7 +162,7 @@ class Db extends DbOps
             $table = self::$_ops->addBackticks($table);
             if ($remember && $remember != $table && !in_array($table, $joined)) {
                 $qStr .= ' JOIN ' . $table . ' ON ' . $remember . '.`id` = ' . $table . '.' . substr($remember, 0, -1) .
-                         '_id` ';
+                         (self::$_env->get('casing') == 'snake' ? '_id` ' : 'Id` ');
                 array_push($joined, $table);
             } elseif (!$remember) {
                 $qStr .= $table;
