@@ -111,7 +111,8 @@ class Db extends DbOps
         if ($hard) {
             $sql = '>DELETE FROM ' . $table . ' WHERE `id` =';
         } else {
-            $sql = '>UPDATE ' . $table . ' SET `delete_date` = NOW() WHERE `id` =';
+            $deleteDate = (self::$_env->get('casing') == 'snake' ? 'delete_date' : 'deleteDate');
+            $sql = '>UPDATE ' . $table . ' SET `' . $deleteDate . '` = NOW() WHERE `id` =';
         }
         if (self::$_env->get('assumes_uuid')) {
             $sql .= 'UNHEX({{id}})';
