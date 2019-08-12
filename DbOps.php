@@ -10,9 +10,11 @@ namespace Neoan3\Apps;
 
 /**
  * Class DbOps
+ *
  * @package Neoan3\Apps
  */
-class DbOps {
+class DbOps
+{
     /**
      * @var array
      */
@@ -27,21 +29,24 @@ class DbOps {
      *
      * @param $env
      */
-    function __construct($env) {
+    function __construct($env)
+    {
         self::$_env = $env;
     }
 
     /**
      * @return array
      */
-    protected function getExclusions() {
+    protected function getExclusions()
+    {
         return self::$preparedExclusions;
     }
 
     /**
      * clears Exclusions
      */
-    protected function clearExclusions() {
+    protected function clearExclusions()
+    {
         self::$preparedExclusions = [];
     }
 
@@ -49,7 +54,8 @@ class DbOps {
      * @param $value
      * @param $type
      */
-    protected function addExclusion($value, $type = '') {
+    protected function addExclusion($value, $type = '')
+    {
         if ($type == '') {
             $type = $this->mysqliStmtType($value);
         }
@@ -59,10 +65,12 @@ class DbOps {
     /**
      * @param $value
      * @param $type
+     *
      * @return array
      */
-    private function prepareBinding($value, $type) {
-        return ['type'=>$type,'value'=>$value];
+    private function prepareBinding($value, $type)
+    {
+        return ['type' => $type, 'value' => $value];
     }
 
     /**
@@ -75,13 +83,14 @@ class DbOps {
      * @return array|bool|string
      * @throws DbException
      */
-    protected function operandi($string, $set = false, $prepared = false) {
-        if(empty($string) && $string !== "0") {
+    protected function operandi($string, $set = false, $prepared = false)
+    {
+        if (empty($string) && $string !== "0") {
             return ($set ? ' = NULL' : ' IS NULL');
         }
 
         $firstLetter = strtolower(substr($string, 0, 1));
-        switch($firstLetter) {
+        switch ($firstLetter) {
             case '=':
                 // important! this is the first rule and needs to stay as such!
                 $return = ' = ? ';
@@ -96,23 +105,22 @@ class DbOps {
                 break;
             case '$':
                 $rest = substr($string, 1);
-                if($prepared){
+                if ($prepared) {
                     $return = ' = UNHEX(?)';
                     $this->addExclusion($rest, 's');
                 } else {
-                    $return = ' = UNHEX("'.$rest.'")';
+                    $return = ' = UNHEX("' . $rest . '")';
                 }
                 break;
             case '!':
-                if(strtolower($string) == '!null' || strlen($string) == 1){
-                    if($set){
-                        $this->formatError(
-                            [$string], 'Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"'
-                        );
+                if (strtolower($string) == '!null' || strlen($string) == 1) {
+                    if ($set) {
+                        $this->formatError([$string],
+                            'Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"');
                     }
                     $return = ' IS NOT NULL ';
                 } else {
-                    if($set){
+                    if ($set) {
                         $this->formatError([$string], 'Cannot use "!= ' . substr($string, 1) . '" to set a value');
                     }
                     $return = ' != "' . substr($string, 1) . '"';
@@ -125,9 +133,9 @@ class DbOps {
                 $return = ($set ? ' = NULL' : ' IS NULL');
                 break;
             default:
-                if(strtolower($string) == 'null'){
+                if (strtolower($string) == 'null') {
                     $return = ($set ? ' = NULL' : ' IS NULL');
-                } elseif($prepared){
+                } elseif ($prepared) {
                     $return = ' = ? ';
                     $this->addExclusion($string);
                 } else {
@@ -145,10 +153,11 @@ class DbOps {
      *
      * @return string
      */
-    protected function selectandi($string) {
+    protected function selectandi($string)
+    {
         $firstLetter = strtolower(substr($string, 0, 1));
         $rest = substr($string, 1);
-        switch($firstLetter) {
+        switch ($firstLetter) {
             case '=':
                 $return = $this->addBackticks(substr($string, 1));
                 break;
@@ -171,7 +180,8 @@ class DbOps {
      *
      * @return string
      */
-    private function _sanitizeAndAddBackticks($string) {
+    private function _sanitizeAndAddBackticks($string)
+    {
         return $this->addBackticks(Db::sanitizeKey($string));
     }
 
@@ -182,12 +192,13 @@ class DbOps {
      *
      * @return string
      */
-    protected function addBackticks($string) {
+    protected function addBackticks($string)
+    {
         $parts = explode('.', $string);
         $result = '';
-        foreach($parts as $i => $part) {
+        foreach ($parts as $i => $part) {
             $result .= ($i > 0 ? '.' : '');
-            if($part !== '*') {
+            if ($part !== '*') {
                 $result .= '`' . $part . '`';
             } else {
                 $result .= $part;
@@ -195,20 +206,23 @@ class DbOps {
         }
         return $result;
     }
+
     /**
      * @param $rest
+     *
      * @return string
      */
-    protected function checkAs($rest) {
-        if(empty($rest) || $rest == '' || strpos($rest,'*')!== false){
+    protected function checkAs($rest)
+    {
+        if (empty($rest) || $rest == '' || strpos($rest, '*') !== false) {
             // catch asterisk-selector
             return '';
         }
-        $as = explode(':',$rest);
-        $als = explode('.',$rest);
-        if(count($as)>1){
+        $as = explode(':', $rest);
+        $als = explode('.', $rest);
+        if (count($as) > 1) {
             return ' as "' . $as[1] . '"';
-        } elseif (count($als)>1){
+        } elseif (count($als) > 1) {
             return ' as "' . $als[1] . '"';
         } else {
 
@@ -218,14 +232,16 @@ class DbOps {
 
     /**
      * @param $rest
+     *
      * @return mixed
      */
-    protected function cleanAs($rest) {
-        $as = explode(':',$rest);
-        $als = explode('.',$rest);
-        if(count($as)>1){
+    protected function cleanAs($rest)
+    {
+        $as = explode(':', $rest);
+        $als = explode('.', $rest);
+        if (count($as) > 1) {
             return $as[0];
-        } elseif (count($als)>1){
+        } elseif (count($als) > 1) {
             return $als[0];
         } else {
             return $rest;
@@ -240,9 +256,10 @@ class DbOps {
      *
      * @throws DbException
      */
-    public function formatError($values, $msg, $sql = false) {
+    public function formatError($values, $msg, $sql = false)
+    {
         $format = $msg . ' Given values: ' . implode(', ', $values);
-        if(self::$_env->get('dev_errors') && $sql) {
+        if (self::$_env->get('dev_errors') && $sql) {
             $format .= ' SQL: ' . $sql;
         }
 
@@ -254,7 +271,8 @@ class DbOps {
      *
      * @return string
      */
-    public function mysqliStmtType($value) {
+    public function mysqliStmtType($value)
+    {
         $value = trim($value);
         if (!preg_match('/[^0-9\.]/', $value) && substr($value, 0, 1) != 0) {
             // d or i?
@@ -265,9 +283,11 @@ class DbOps {
 
     /**
      * @param $str
+     *
      * @return bool
      */
-    public static function isBinary($str) {
+    public static function isBinary($str)
+    {
         return preg_match('~[^\x20-\x7E\t\r\n]~', $str) > 0;
     }
 }

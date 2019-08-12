@@ -14,7 +14,8 @@ namespace Neoan3\Apps;
  *
  * @package Neoan3\Apps
  */
-class UuidHandler {
+class UuidHandler
+{
     /**
      * @var
      */
@@ -31,7 +32,8 @@ class UuidHandler {
      *
      * @throws DbException
      */
-    function __construct($ops) {
+    function __construct($ops)
+    {
         self::$_ops = $ops;
         try {
             if (!$id = $this->newUuid()) {
@@ -51,10 +53,11 @@ class UuidHandler {
      * @return $this
      * @throws DbException
      */
-    public function newUuid(){
+    public function newUuid()
+    {
         $q = Db::query('SELECT REPLACE(UUID(),"-","") as id');
 
-        while($row = $q['result']->fetch_assoc()){
+        while ($row = $q['result']->fetch_assoc()) {
             $this->uuid = strtoupper($row['id']);
         }
         return $this;
@@ -67,12 +70,13 @@ class UuidHandler {
      *
      * @return mixed
      */
-    public function convertBinaryResults($resultArray){
-        foreach ($resultArray as $i => $item){
-            if(is_numeric($i)){
+    public function convertBinaryResults($resultArray)
+    {
+        foreach ($resultArray as $i => $item) {
+            if (is_numeric($i)) {
                 $resultArray[$i] = $this->convertBinaryResults($item);
-            } elseif(is_string($item)) {
-                if(DbOps::isBinary($item)){
+            } elseif (is_string($item)) {
+                if (DbOps::isBinary($item)) {
                     $resultArray[$i] = strtoupper(bin2hex($item));
                 }
             }
@@ -87,10 +91,11 @@ class UuidHandler {
      *
      * @return bool|mixed
      */
-    public function convertToCompliantUuid($uuid=false){
-        $id = ($uuid?$uuid:$this->uuid);
+    public function convertToCompliantUuid($uuid = false)
+    {
+        $id = ($uuid ? $uuid : $this->uuid);
         $arr = [8, 13, 18, 23];
-        foreach ($arr as $part){
+        foreach ($arr as $part) {
             $id = substr_replace($id, '-', $part, 0);
         }
         return $id;
@@ -103,7 +108,8 @@ class UuidHandler {
      *
      * @return string
      */
-    public function insertAsBinary($uuid=false){
+    public function insertAsBinary($uuid = false)
+    {
         return '{ = ' . $this->unhexUuid($uuid) . ' }';
     }
 
@@ -114,9 +120,10 @@ class UuidHandler {
      *
      * @return string
      */
-    private function unhexUuid($uuid=false){
+    private function unhexUuid($uuid = false)
+    {
 
-        return 'UNHEX("' . ($uuid?$uuid:$this->uuid) . '")';
+        return 'UNHEX("' . ($uuid ? $uuid : $this->uuid) . '")';
     }
 
     /**
@@ -124,8 +131,9 @@ class UuidHandler {
      *
      * @return string
      */
-    private function hexUuid($newUuid=false){
-        return 'HEX(' . ($newUuid?'UUID()': '"' . $this->uuid . '"') . ')';
+    private function hexUuid($newUuid = false)
+    {
+        return 'HEX(' . ($newUuid ? 'UUID()' : '"' . $this->uuid . '"') . ')';
     }
 
 }
