@@ -2,7 +2,7 @@
 namespace Test;
 define('path',dirname(dirname(__FILE__)));
 define('db_host','localhost');
-define('db_name', 'db_app');
+define('db_name', 'camelcase');
 define('db_user','root');
 define('db_password','');
 
@@ -10,8 +10,8 @@ define('db_password','');
 define('db_assumes_uuid',true);
 define('db_dev_errors', true);
 
-require_once path . '/Db.php';
 require_once path . '/DbOps.php';
+require_once path . '/Db.php';
 require_once path . '/UuidHandler.php';
 require_once path . '/Deprecated.php';
 require_once path . '/DbException.php';
@@ -29,7 +29,6 @@ try {
     die();
 }
 
-//Db::debug();
 
 
 // debug
