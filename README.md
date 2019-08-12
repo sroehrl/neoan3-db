@@ -85,7 +85,7 @@ try {
 
 
 
-### Environment variable
+### Environment variables
 
 | Define | | Default |
 |--------|--------|--------|
@@ -97,6 +97,7 @@ try {
 | db_app_root | Will read the define 'path' if neoan3 is used  | /parent/of/vendor/folder/ |
 | db_file_location | folder of SQL-files relative to app_root  | 'component' |
 | db_filter_characters | filters table-names & array-keys  | '/[^a-zA-Z\_\\^\\.\s\*]/' |
+| db_casing | *camel* or *snake* for column names | 'snake' |
 
 Environment variables can either be set as global constants or using Db::setEnvironment()
 
@@ -117,13 +118,14 @@ Db::setEnvironment(['name'=>'test_db','password'=>'FooBar']);
 ### Conventions
 
 This tool was created with the recommended neoan3 database structure in mind.
-As such, the following assumptions are made for best usability (auto-joins etc.):
+As such, the following assumptions are made for best usability (auto-joins etc.).
+( See [environment variables](#environment-variables) ):
 
 - tables use snake_case naming
-- fields use snake_case naming
-- primary keys are either int(11) auto_incremented or binary(16)
-- primary keys are called "id", foreign relations are referred to as [table_name]_id
-- when handling rows marked as deleted, the field name must be "delete_date" (type can be DATE or DATETIME)
+- columns use snake_case naming OR cameCase naming 
+- primary keys are either int(11) auto_incremented OR binary(16)
+- primary keys are called "id", foreign relations are referred to as [table_name]_id OR [table_nameId] 
+- when handling rows marked as deleted, the field name must be "delete_date" OR "deleteDate"  (type can be DATE or DATETIME)
 
 ## Getting started
 ### Db::easy($selectorString [, $conditionArray, $callFunctions, $debug])
@@ -135,7 +137,7 @@ It returns an array of associative arrays. The easy-markup is a simplified selec
 |`Db::easy('user.first_name user.last_name',['gender'=>'female']);`| `SELECT user.first_name, user.last_name FROM user WHERE gender = ?` 's' 'female' |
 |`Db::easy('user.* user_email.email');` | `SELECT user.*, user_email.email FROM user JOIN user_email on user_email.user_id = user.id` |
 
-See operandi & selectandi for added complexity
+See [operandi](#conditional-modifiers-operandi) & [selectandi](#value-modifiers-selectandi) for added complexity
 
 ### Db::ask($param1 [, $param1, $param1])
 The ask-function can execute queries based on how it is used. 

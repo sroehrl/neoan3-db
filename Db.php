@@ -21,6 +21,7 @@ use mysqli_stmt;
  * db_file_location (if defined, will overwrite the default "component"- expectation for SQL-files)
  * db_charset (if defined, will overwrite the default "utf8mb4" assumption)
  * db_filter_characters (if defined, will overwrite the default value "/[^a-zA-Z\_\^\.\s]/" )
+ * db_casing (if defined, will overwrite the default value "snake" (currently accepts "camel")
  *
  * @package Neoan3\Apps
  */
