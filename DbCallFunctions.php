@@ -16,17 +16,19 @@ use Countable;
  *
  * @package Neoan3\Apps
  */
-class DbCallFunctions {
+class DbCallFunctions
+{
     /**
      * @param $array
      *
      * @return string
      */
-    static function calls($array) {
+    static function calls($array)
+    {
         $return = '';
-        if(is_countable($array) && count($array) > 1) {
+        if (is_countable($array) && count($array) > 1) {
             array_shift($array);
-            foreach($array as $key => $value) {
+            foreach ($array as $key => $value) {
                 $func = $key;
                 $return .= self::$func($value);
             }
@@ -40,7 +42,8 @@ class DbCallFunctions {
      *
      * @return mixed
      */
-    static function call($function, $arguments) {
+    static function call($function, $arguments)
+    {
         return self::$function($arguments);
     }
 
@@ -49,9 +52,10 @@ class DbCallFunctions {
      *
      * @return string
      */
-    private static function orderBy($array) {
+    private static function orderBy($array)
+    {
         $origin = $array;
-        if(count($array) > 1) {
+        if (count($array) > 1) {
             self::calls(array_shift($array));
         }
         return ' ORDER BY ' . $origin[0] . ' ' . strtoupper($origin[1]);
@@ -62,9 +66,10 @@ class DbCallFunctions {
      *
      * @return string
      */
-    private static function groupBy($array) {
+    private static function groupBy($array)
+    {
         $origin = $array;
-        if(count($array) > 1) {
+        if (count($array) > 1) {
             self::calls(array_shift($array));
         }
         return ' GROUP BY ' . $origin[0] . (intval($origin[1]) > 0 ? ', ' . $origin[1] : '');
@@ -75,9 +80,10 @@ class DbCallFunctions {
      *
      * @return string
      */
-    private static function limit($array) {
+    private static function limit($array)
+    {
         $origin = $array;
-        if(count($array) > 1) {
+        if (count($array) > 1) {
             self::calls(array_shift($array));
         }
         return ' LIMIT ' . $origin[0] . (intval($origin[1]) > 0 ? ', ' . $origin[1] : '');
@@ -85,8 +91,9 @@ class DbCallFunctions {
 }
 
 // Polyfill for PHP<7.3
-if(!function_exists('is_countable')) {
-    function is_countable($var) {
+if (!function_exists('is_countable')) {
+    function is_countable($var)
+    {
         return (is_array($var) || $var instanceof Countable);
     }
 }

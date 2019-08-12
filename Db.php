@@ -21,10 +21,12 @@ use mysqli_stmt;
  * db_file_location (if defined, will overwrite the default "component"- expectation for SQL-files)
  * db_charset (if defined, will overwrite the default "utf8mb4" assumption)
  * db_filter_characters (if defined, will overwrite the default value "/[^a-zA-Z\_\^\.\s]/" )
+ * db_casing (if defined, will overwrite the default value "snake" (currently accepts "camel")
  *
  * @package Neoan3\Apps
  */
-class Db extends DbOps {
+class Db extends DbOps
+{
     /**
      * @var
      */
@@ -41,11 +43,12 @@ class Db extends DbOps {
     /**
      * Db initiator.
      */
-    private static function init() {
-        if(!self::$_env) {
+    private static function init()
+    {
+        if (!self::$_env) {
             self::$_env = new DbEnvironment();
         }
-        if(!self::$_ops) {
+        if (!self::$_ops) {
             self::$_ops = new DbOps(self::$_env);
         }
     }
@@ -57,7 +60,8 @@ class Db extends DbOps {
      * @return array|int|mixed
      * @throws DbException
      */
-    public static function __callStatic($methodName, $arguments) {
+    public static function __callStatic($methodName, $arguments)
+    {
         return self::ask($methodName, ...$arguments);
     }
 
@@ -69,12 +73,13 @@ class Db extends DbOps {
      * @return array|int|mixed
      * @throws DbException
      */
-    public static function ask($param1, $param2 = null, $param3 = null) {
+    public static function ask($param1, $param2 = null, $param3 = null)
+    {
         self::init();
-        if(is_array($param1)) {
+        if (is_array($param1)) {
             return self::smartSelect($param1, $param2, $param3);
         } else {
-            switch(substr($param1, 0, 1)) {
+            switch (substr($param1, 0, 1)) {
                 case '>':
                 case '/':
                     return self::smartQuery($param1, $param2);
@@ -83,7 +88,7 @@ class Db extends DbOps {
                     return self::smartSelect(substr($param1, 1), $param2, $param3);
                     break;
                 default:
-                    if(is_array($param3)) {
+                    if (is_array($param3)) {
                         return self::smartUpdate($param1, $param2, $param3);
                     } else {
                         return self::smartInsert($param1, $param2);
@@ -100,15 +105,17 @@ class Db extends DbOps {
      * @return array|int|mixed
      * @throws DbException
      */
-    public static function delete($table, $id, $hard = false) {
+    public static function delete($table, $id, $hard = false)
+    {
         self::init();
         $table = self::$_ops->addBackticks(self::sanitizeKey($table));
-        if($hard) {
+        if ($hard) {
             $sql = '>DELETE FROM ' . $table . ' WHERE `id` =';
         } else {
-            $sql = '>UPDATE ' . $table . ' SET `delete_date` = NOW() WHERE `id` =';
+            $deleteDate = (self::$_env->get('casing') == 'snake' ? 'delete_date' : 'deleteDate');
+            $sql = '>UPDATE ' . $table . ' SET `' . $deleteDate . '` = NOW() WHERE `id` =';
         }
-        if(self::$_env->get('assumes_uuid')) {
+        if (self::$_env->get('assumes_uuid')) {
             $sql .= 'UNHEX({{id}})';
         } else {
             $sql .= '{{id}}';
@@ -121,10 +128,11 @@ class Db extends DbOps {
      *
      * @return string
      */
-    private static function handleSelectandi($fields) {
+    private static function handleSelectandi($fields)
+    {
         $i = 0;
         $res = '';
-        foreach($fields as $what) {
+        foreach ($fields as $what) {
             $res .= ($i > 0 ? ', ' : '') . self::$_ops->selectandi($what);
             $i++;
         }
@@ -140,7 +148,8 @@ class Db extends DbOps {
      * @return mixed
      * @throws DbException
      */
-    public static function easy($selectorString, $conditionArray = [], $callFunctions = [], $output = 'data') {
+    public static function easy($selectorString, $conditionArray = [], $callFunctions = [], $output = 'data')
+    {
         self::init();
         $qStr = 'SELECT ';
         $selects = explode(' ', $selectorString);
@@ -149,28 +158,28 @@ class Db extends DbOps {
         $qStr .= ' FROM ';
         $remember = false;
         $joined = [];
-        foreach($selects as $what) {
+        foreach ($selects as $what) {
             $table = explode('.', trim($what));
             $table = preg_replace('/[^a-zA-Z_]/', '', $table[0]);
             $table = self::$_ops->addBackticks($table);
-            if($remember && $remember != $table && !in_array($table, $joined)) {
+            if ($remember && $remember != $table && !in_array($table, $joined)) {
                 $qStr .= ' JOIN ' . $table . ' ON ' . $remember . '.`id` = ' . $table . '.' . substr($remember, 0, -1) .
-                         '_id` ';
+                         (self::$_env->get('casing') == 'snake' ? '_id` ' : 'Id` ');
                 array_push($joined, $table);
-            } elseif(!$remember) {
+            } elseif (!$remember) {
                 $qStr .= $table;
                 $remember = $table;
             }
         }
-        if(!empty($conditionArray)) {
+        if (!empty($conditionArray)) {
             $qStr .= self::handleConditions($conditionArray);
         }
-        if(!empty($callFunctions)) {
-            foreach($callFunctions as $callFunction => $arguments) {
+        if (!empty($callFunctions)) {
+            foreach ($callFunctions as $callFunction => $arguments) {
                 $qStr .= DbCallFunctions::call($callFunction, $arguments) . "\n";
             }
         }
-        if($output == 'debug') {
+        if ($output == 'debug') {
             return $qStr;
         }
         return self::handleResults($qStr);
@@ -183,11 +192,12 @@ class Db extends DbOps {
      * @return string
      * @throws DbException
      */
-    private static function handleConditions($conditionArray) {
+    private static function handleConditions($conditionArray)
+    {
         $return = '';
         $i = 0;
-        foreach($conditionArray as $key => $value) {
-            if(is_numeric($key)) {
+        foreach ($conditionArray as $key => $value) {
+            if (is_numeric($key)) {
                 $key = self::$_ops->addBackticks(substr($value, 1));
             }
             $key = self::sanitizeKey($key);
@@ -204,19 +214,20 @@ class Db extends DbOps {
      * @return array|int
      * @throws DbException
      */
-    public static function handleResults($qStr) {
+    public static function handleResults($qStr)
+    {
         self::init();
-        if(defined('db_hard_debug')) {
+        if (defined('db_hard_debug')) {
             return [
                 'sql'        => $qStr,
                 'exclusions' => self::$_ops->getExclusions()
             ];
         }
         $result = 0;
-        if($exe = self::preparedQuery($qStr)) {
+        if ($exe = self::preparedQuery($qStr)) {
             if ($exe['result'] && !is_bool($exe['result'])) {
                 $result = [];
-                while($row = $exe['result']->fetch_assoc()) {
+                while ($row = $exe['result']->fetch_assoc()) {
                     $result[] = $row;
                 }
                 $exe['result']->free();
@@ -225,15 +236,15 @@ class Db extends DbOps {
             }
         }
         self::$_ops->clearExclusions();
-        if(!self::$_env->get('assumes_uuid')) {
-            if(self::$_db->insert_id > 0) {
+        if (!self::$_env->get('assumes_uuid')) {
+            if (self::$_db->insert_id > 0) {
                 return self::$_db->insert_id;
             }
-        } elseif(!empty($result)) {
+        } elseif (!empty($result)) {
             $handler = new UuidHandler(self::$_ops);
             $result = $handler->convertBinaryResults($result);
         }
-        if(self::$_db->affected_rows > 0 && empty($result)) {
+        if (self::$_db->affected_rows > 0 && empty($result)) {
             return self::$_db->affected_rows;
         }
         return $result;
@@ -245,7 +256,8 @@ class Db extends DbOps {
      * @return mysqli_stmt
      * @throws DbException
      */
-    public static function prepareStmt($sql) {
+    public static function prepareStmt($sql)
+    {
         self::init();
         $db = self::connect();
         return $db->prepare($sql);
@@ -259,16 +271,17 @@ class Db extends DbOps {
      * @return array
      * @throws DbException
      */
-    public static function executeStmt($stmt, $types, $inserts) {
+    public static function executeStmt($stmt, $types, $inserts)
+    {
         self::init();
         try {
-            if(!$stmt) {
+            if (!$stmt) {
                 throw new DbException('Statement not established');
-            } elseif(!$stmt->bind_param($types, ...$inserts)) {
+            } elseif (!$stmt->bind_param($types, ...$inserts)) {
                 throw new DbException('Binding error');
             }
             $stmt->execute();
-        } catch(DbException $e) {
+        } catch (DbException $e) {
             self::$_ops->formatError($inserts, $e->getMessage());
         } finally {
             return self::evaluateQuery($stmt);
@@ -282,13 +295,14 @@ class Db extends DbOps {
      * @return array
      * @throws DbException
      */
-    public static function preparedQuery($sql) {
+    public static function preparedQuery($sql)
+    {
         self::init();
-        if(!empty($exclusions = self::$_ops->getExclusions())) {
+        if (!empty($exclusions = self::$_ops->getExclusions())) {
             $prepared = self::prepareStmt($sql);
             $inserts = [];
             $types = '';
-            foreach($exclusions as $i => $substitute) {
+            foreach ($exclusions as $i => $substitute) {
                 $types .= $substitute['type'];
                 $inserts[] = $substitute['value'];
             }
@@ -304,8 +318,9 @@ class Db extends DbOps {
      * @return array
      * @throws DbException
      */
-    private static function evaluateQuery($resObj) {
-        if(!$resObj) {
+    private static function evaluateQuery($resObj)
+    {
+        if (!$resObj) {
             throw new DbException('Unable to evaluate results');
         }
         return [
@@ -326,7 +341,8 @@ class Db extends DbOps {
      *
      * @return array
      */
-    public static function data($sql, $type = 'query') {
+    public static function data($sql, $type = 'query')
+    {
         self::init();
         self::deprecationWarning();
         return Deprecated::data($sql, $type);
@@ -336,7 +352,8 @@ class Db extends DbOps {
      * @return mysqli
      * @throws DbException
      */
-    public static function raw() {
+    public static function raw()
+    {
         self::init();
         return self::connect();
     }
@@ -347,23 +364,24 @@ class Db extends DbOps {
      * @return array|void
      * @throws DbException
      */
-    public static function query($sql) {
+    public static function query($sql)
+    {
         self::init();
         try {
             $db = self::connect();
-            if(is_array($db)) {
+            if (is_array($db)) {
                 throw new DbException('Connection error');
             }
-            if(!$query = $db->query($sql)) {
+            if (!$query = $db->query($sql)) {
                 throw new DbException('Failed to execute query!');
             }
-        } catch(mysqli_sql_exception $e) {
+        } catch (mysqli_sql_exception $e) {
             self::$_ops->formatError([], $e->getMessage(), $sql);
 
-        } catch(DbException $e) {
+        } catch (DbException $e) {
             self::$_ops->formatError([], $e->getMessage(), $sql);
         }
-        if(isset($query) && isset($db)) {
+        if (isset($query) && isset($db)) {
             return ['result' => $query, 'link' => $db];
         }
     }
@@ -374,13 +392,15 @@ class Db extends DbOps {
      * @return array
      * @throws DbException
      */
-    public static function multi_query($sql) {
+    public static function multi_query($sql)
+    {
         self::init();
         self::connect();
         mysqli_report(MYSQLI_REPORT_STRICT);
         try {
-            $query = self::connect()->multi_query($sql);
-        } catch(mysqli_sql_exception $e) {
+            $query = self::connect()
+                         ->multi_query($sql);
+        } catch (mysqli_sql_exception $e) {
             throw $e;
         }
         return ['result' => $query, 'link' => self::$_db];
@@ -389,16 +409,16 @@ class Db extends DbOps {
     /**
      * @throws DbException
      */
-    private static function connect() {
+    private static function connect()
+    {
         mysqli_report(MYSQLI_REPORT_STRICT);
 
-        if(!self::$_db) {
+        if (!self::$_db) {
             try {
-                self::$_db = new mysqli(
-                    self::$_env->get('host'), self::$_env->get('user'), self::$_env->get('password'),
-                    self::$_env->get('name')
-                );
-            } catch(mysqli_sql_exception $e) {
+                self::$_db =
+                    new mysqli(self::$_env->get('host'), self::$_env->get('user'), self::$_env->get('password'),
+                        self::$_env->get('name'));
+            } catch (mysqli_sql_exception $e) {
                 self::$_ops->formatError(['****'], 'Check defines! Can\'t connect to db');
             }
             self::$_env->bindMysqli(self::$_db);
@@ -412,9 +432,10 @@ class Db extends DbOps {
      *
      * @throws DbException
      */
-    public static function setCharSet($charset) {
+    public static function setCharSet($charset)
+    {
         self::init();
-        if(!self::$_db) {
+        if (!self::$_db) {
             self::connect();
         }
         self::$_env->setCharset($charset);
@@ -428,11 +449,12 @@ class Db extends DbOps {
      *
      * @throws DbException
      */
-    public static function setEnvironment($property, $value = false) {
+    public static function setEnvironment($property, $value = false)
+    {
         self::init();
         self::$_db = null;
-        if(is_array($property)) {
-            foreach($property as $prop => $val) {
+        if (is_array($property)) {
+            foreach ($property as $prop => $val) {
                 self::$_env->set($prop, $val);
             }
         } elseif ($value !== false) {
@@ -449,10 +471,11 @@ class Db extends DbOps {
      * @return array
      * @throws DbException
      */
-    private static function smartQuery($path, $fields = null) {
+    private static function smartQuery($path, $fields = null)
+    {
         $root = self::$_env->get('app_root');
         $rest = substr($path, 1);
-        if(substr($path, 0, 1) == '>') {
+        if (substr($path, 0, 1) == '>') {
             $sql = $rest;
         } else {
             $parts = explode('/', $rest);
@@ -461,16 +484,14 @@ class Db extends DbOps {
             $filePath .= $parts[0] . '/' . $file . '.sql';
             $sql = file_get_contents($root . $filePath);
         }
-        if(!empty($fields)) {
-            $sql = preg_replace_callback(
-                '/\{\{([a-zA-Z_]+)\}\}/', function($hit) use ($fields) {
-                if(!isset($fields[$hit[1]])) {
+        if (!empty($fields)) {
+            $sql = preg_replace_callback('/\{\{([a-zA-Z_]+)\}\}/', function ($hit) use ($fields) {
+                if (!isset($fields[$hit[1]])) {
                     self::$_ops->formatError($hit, 'Required field missing: ' . $hit[1]);
                 }
                 self::$_ops->addExclusion($fields[$hit[1]]);
                 return '?';
-            }, $sql
-            );
+            }, $sql);
         }
         return self::handleResults($sql);
 
@@ -484,9 +505,10 @@ class Db extends DbOps {
      * @return mixed
      * @throws DbException
      */
-    private static function smartSelect($table, $fields = null, $where = null) {
+    private static function smartSelect($table, $fields = null, $where = null)
+    {
         $additional = '';
-        if(is_array($table)) {
+        if (is_array($table)) {
             $additional = DbCallFunctions::calls($table);
             $table = $table['from'];
         }
@@ -506,7 +528,8 @@ class Db extends DbOps {
      * @return mixed
      * @throws DbException
      */
-    private static function smartUpdate($table, $fields, $where) {
+    private static function smartUpdate($table, $fields, $where)
+    {
         $table = self::sanitizeKey($table);
         $fieldsString = self::setFields($fields);
         $whereString = self::handleConditions($where);
@@ -522,10 +545,12 @@ class Db extends DbOps {
      * @return mixed
      * @throws DbException
      */
-    private static function smartInsert($table, $fields) {
+    private static function smartInsert($table, $fields)
+    {
         $table = self::sanitizeKey($table);
-        if(!isset($fields['id']) && self::$_env->get('assumes_uuid')) {
-            $fields['id'] = self::uuid()->insertAsBinary();
+        if (!isset($fields['id']) && self::$_env->get('assumes_uuid')) {
+            $fields['id'] = self::uuid()
+                                ->insertAsBinary();
         }
         $fieldsString = self::setFields($fields);
         $sql = 'INSERT INTO ' . self::$_ops->addBackticks($table) . ' SET ' . $fieldsString;
@@ -538,10 +563,11 @@ class Db extends DbOps {
      * @return string
      * @throws DbException
      */
-    private static function setFields($fields) {
+    private static function setFields($fields)
+    {
         $fieldsString = '';
         $i = 0;
-        foreach($fields as $key => $val) {
+        foreach ($fields as $key => $val) {
             $fieldsString .= ($i > 0 ? ",\n  " : '') . self::$_ops->addBackticks($key) .
                              self::$_ops->operandi($val, true, true);
             $i++;
@@ -559,7 +585,8 @@ class Db extends DbOps {
      *
      * @return string|string[]|null
      */
-    public static function sanitizeKey($keyString) {
+    public static function sanitizeKey($keyString)
+    {
         $pattern = self::$_env->get('filter_characters');
         return preg_replace($pattern, '', $keyString);
     }
@@ -574,7 +601,8 @@ class Db extends DbOps {
      *
      * @return array|mixed
      */
-    public static function escape($inp) {
+    public static function escape($inp)
+    {
         self::init();
         self::deprecationWarning();
         return Deprecated::escape($inp);
@@ -584,7 +612,8 @@ class Db extends DbOps {
     /**
      * Creates a NOTICE
      */
-    private static function deprecationWarning() {
+    private static function deprecationWarning()
+    {
         $caller = next(debug_backtrace());
         $msg = 'Deprecated Db-function in function ' . $caller['function'] . ' called from ' . $caller['file'];
         $msg .= ' on line ' . $caller['line'];
@@ -595,7 +624,8 @@ class Db extends DbOps {
     /**
      * Sets debugging to highest mode: query will not be executed
      */
-    public static function debug() {
+    public static function debug()
+    {
         define('db_hard_debug', true);
     }
 
@@ -604,7 +634,8 @@ class Db extends DbOps {
      *
      * @return string
      */
-    public static function secureJson($json) {
+    public static function secureJson($json)
+    {
         self::init();
         return '{ = "' . addslashes($json) . '" }';
     }
@@ -613,7 +644,8 @@ class Db extends DbOps {
      * @return UuidHandler
      * @throws DbException
      */
-    public static function uuid() {
+    public static function uuid()
+    {
         self::init();
         return new UuidHandler(self::$_ops);
     }
