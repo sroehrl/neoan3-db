@@ -168,7 +168,7 @@ class DbOps
                 $return = 'HEX(' . $this->_sanitizeAndAddBackticks($this->cleanAs($rest)) . ')';
                 break;
             default:
-                $return = $this->addBackticks($string);
+                $return = $this->addBackticks(preg_replace('/\:.*/', '', $string));
         }
         return $return . $this->checkAs($string);
     }

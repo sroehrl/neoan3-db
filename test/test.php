@@ -16,11 +16,11 @@ require_once path . '/UuidHandler.php';
 require_once path . '/Deprecated.php';
 require_once path . '/DbException.php';
 require_once path . '/DbEnvironment.php';
+require_once path . '/Db.php';
 
 use Neoan3\Apps\Db;
 use Neoan3\Apps\DbException;
 use Neoan3\Apps\DbOps;
-
 
 try {
     $id = Db::uuid();
