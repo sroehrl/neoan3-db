@@ -1,7 +1,7 @@
 {
   "name": "neoan3-apps/db",
   "description": "neoan3 mysqli class",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "require": {
     "php": "^7.0",
