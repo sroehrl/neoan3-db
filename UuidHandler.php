@@ -55,11 +55,11 @@ class UuidHandler
      */
     public function newUuid()
     {
-        $q = Db::query('SELECT REPLACE(UUID(),"-","") as id');
-
-        while ($row = $q['result']->fetch_assoc()) {
-            $this->uuid = strtoupper($row['id']);
+        $q = Db::query('SELECT UPPER(REPLACE(UUID(),"-","")) as id');
+        while ($row = $q['result']->fetch_object()) {
+            $this->uuid = $row->id;
         }
+
         return $this;
     }
 
