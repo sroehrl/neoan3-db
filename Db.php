@@ -217,10 +217,12 @@ class Db extends DbOps
     public static function handleResults($qStr)
     {
         self::init();
-        if (defined('db_hard_debug')) {
+        if (self::$_env->get('debug')) {
+            $exclusions = self::$_ops->getExclusions();
+            self::$_ops->clearExclusions();
             return [
                 'sql'        => $qStr,
-                'exclusions' => self::$_ops->getExclusions()
+                'exclusions' => $exclusions
             ];
         }
         $result = 0;
@@ -417,7 +419,7 @@ class Db extends DbOps
             try {
                 self::$_db =
                     new mysqli(self::$_env->get('host'), self::$_env->get('user'), self::$_env->get('password'),
-                        self::$_env->get('name'));
+                        self::$_env->get('name'), self::$_env->get('port'));
             } catch (mysqli_sql_exception $e) {
                 self::$_ops->formatError(['****'], 'Check defines! Can\'t connect to db');
             }
@@ -626,7 +628,7 @@ class Db extends DbOps
      */
     public static function debug()
     {
-        define('db_hard_debug', true);
+        self::$_env->set('debug', true);
     }
 
     /**
