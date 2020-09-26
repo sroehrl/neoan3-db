@@ -98,6 +98,9 @@ try {
 | db_file_location | folder of SQL-files relative to app_root  | 'component' |
 | db_filter_characters | filters table-names & array-keys  | '/[^a-zA-Z\_\\^\\.\s\*]/' |
 | db_casing | *camel* or *snake* for column names | 'snake' |
+| db_port | (int) port number | 3306 |
+| db_debug | When set to true, SQL is not executed | false |
+| db_dev_errors | When set to true, error reporting exposes handled values | false |
 
 Environment variables can either be set as global constants or using Db::setEnvironment()
 
@@ -253,6 +256,17 @@ This means that foreign keys must be in the format "master"_id.
 Db::easy('user.first_name user.last_name user_email.email user_password.confirm_date');
 ```
 
+## OOP & Testing
+Although you want to write your own wrapper depending on the Interface your framework uses,
+this library comes with a simple wrapper out of the box to encourage dependency injection usage.
+
+```PHP
+$environment = ['name' => 'my_db'];
+$database = new \Neoan3\Apps\DbOOP($environment);
+$database->easy('user.*', ['^delete_date']); //executes & returns Db::easy 
+$database->smart('user', ['name'=>'sam', 'user_type'=>'admin']); //executes & returns Db::ask
+
+```
 
 ## Heads up
 The general approach of the db-app has been applied for years. While the difference to common wrappers for mysqli of pdo seems rather big,

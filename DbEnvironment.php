@@ -42,6 +42,8 @@ class DbEnvironment
             'db_charset'           => defined('db_charset') ? db_charset : 'utf8mb4',
             'db_filter_characters' => defined('db_filter_characters') ? db_filter_characters : '/[^a-zA-Z\_\^\.\s\*]/',
             'db_casing'            => defined('db_casing') ? db_casing : 'snake',
+            'db_port'              => defined('db_port') ? db_port : 3306,
+            'db_debug'             => defined('db_debug') ? db_debug : false
         ];
         return $this;
     }
