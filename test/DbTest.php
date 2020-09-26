@@ -5,6 +5,7 @@ include __DIR__ . '/includes.php';
 
 use Neoan3\Apps\Db;
 use Neoan3\Apps\DbException;
+use Neoan3\Apps\DbOOP;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -123,6 +124,12 @@ class DbTest extends TestCase {
         $this->expectException(DbException::class);
         Db::setEnvironment('debug', false);
         db::easy('user.notset');
+    }
+    public function testOop()
+    {
+        $wrapper = new DbOOP(['debug' => true]);
+        $c = $wrapper->easy('#sam.time:stamp');
+        $this->assertSame('SELECT UNIX_TIMESTAMP(`sam`.`time`)*1000 as "stamp" FROM `sam`', $c['sql']);
     }
 
 
