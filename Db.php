@@ -628,6 +628,7 @@ class Db extends DbOps
      */
     public static function debug()
     {
+        self::init();
         self::$_env->set('debug', true);
     }
 
