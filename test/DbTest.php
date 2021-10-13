@@ -49,6 +49,13 @@ class DbTest extends TestCase {
 
     }
 
+    public function testWildcard()
+    {
+        Db::debug();
+        $try = Db::easy('user.id', ['some' => "enty%"]);
+        $this->assertStringContainsString('WHERE `some` LIKE ?', $try['sql']);
+    }
+
     /**
      * @throws DbException
      */

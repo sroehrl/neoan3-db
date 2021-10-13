@@ -52,9 +52,9 @@ class DbOps
 
     /**
      * @param $value
-     * @param $type
+     * @param string $type
      */
-    protected function addExclusion($value, $type = '')
+    protected function addExclusion($value, string $type = '')
     {
         if ($type == '') {
             $type = $this->mysqliStmtType($value);
@@ -68,7 +68,7 @@ class DbOps
      *
      * @return array
      */
-    private function prepareBinding($value, $type)
+    private function prepareBinding($value, $type): array
     {
         return ['type' => $type, 'value' => $value];
     }
@@ -83,7 +83,7 @@ class DbOps
      * @return array|bool|string
      * @throws DbException
      */
-    protected function operandi($string, $set = false, $prepared = false)
+    protected function operandi($string, bool $set, bool $prepared)
     {
         if (empty($string) && $string !== "0") {
             return ($set ? ' = NULL' : ' IS NULL');
@@ -136,7 +136,7 @@ class DbOps
                 if (strtolower($string) == 'null') {
                     $return = ($set ? ' = NULL' : ' IS NULL');
                 } elseif ($prepared) {
-                    $return = ' = ? ';
+                    $return = preg_match('/%/', $string) ? ' LIKE ? ' : ' = ? ';
                     $this->addExclusion($string);
                 } else {
                     $return = ' = "' . $string . '"';
