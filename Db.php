@@ -565,7 +565,7 @@ class Db extends DbOps
      * @return string
      * @throws DbException
      */
-    private static function setFields($fields)
+    private static function setFields($fields): string
     {
         $fieldsString = '';
         $i = 0;
