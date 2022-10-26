@@ -80,19 +80,19 @@ class DbOps
      * @param bool $set
      * @param bool $prepared
      *
-     * @return mixed
+     * @return string
      * @throws DbException
      */
-    protected function operandi($input, bool $set, bool $prepared)
+    protected function operandi($input, bool $set, bool $prepared): string
     {
         switch (gettype($input)){
             case 'integer':
-                return $input;
+                return ' = ' . $input;
             case 'NULL':
-                return $this->setNull($input, $set);
+                return $this->setNull($set);
         }
         if (empty($input)) {
-            return $this->setNull($input, $set);
+            return $this->setNull($set);
         }
         $firstLetter = strtolower(substr($input, 0, 1));
         switch ($firstLetter) {
@@ -139,7 +139,7 @@ class DbOps
                 break;
             default:
                 if (strtolower($input) == 'null') {
-                    $return = ($set ? ' = NULL' : ' IS NULL');
+                    $return = $this->setNull($set);
                 } elseif ($prepared) {
                     $return = preg_match('/%/', $input) ? ' LIKE ? ' : ' = ? ';
                     $this->addExclusion($input);
@@ -151,7 +151,7 @@ class DbOps
         return $return;
     }
 
-    protected function setNull($value, bool $set): string
+    protected function setNull(bool $set): string
     {
         return ($set ? ' = NULL' : ' IS NULL');
     }

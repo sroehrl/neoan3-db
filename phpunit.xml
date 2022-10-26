@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         stderr="true"
+         backupGlobals="false"
+         backupStaticAttributes="false"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./</directory>
+        </include>
+        <exclude>
+            <directory>./test</directory>
+            <directory>./vendor</directory>
+            <directory>./.github</directory>
+            <directory suffix="Test.php">./</directory>
+        </exclude>
+        <report>
+            <clover outputFile="test/clover.xml"/>
+            <html outputDirectory="test/report"/>
+        </report>
+    </coverage>
+    <testsuites>
+        <testsuite name="unit">
+            <directory suffix="Test.php">./test</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <const name="base" value="http://localhost"/>
+    </php>
+    <logging/>
+</phpunit>
