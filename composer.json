@@ -1,7 +1,6 @@
 {
   "name": "neoan3-apps/db",
   "description": "neoan3 mysqli class",
-  "version": "0.3.6",
   "license": "MIT",
   "require": {
     "php": "^7.4||^8",
@@ -9,7 +8,7 @@
     "ext-ctype": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^9.3"
+    "phpunit/phpunit": "^9.5"
   },
   "authors": [
     {

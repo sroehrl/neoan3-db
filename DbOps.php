@@ -76,35 +76,40 @@ class DbOps
     /**
      * EASY markup interpretation to influence conditions-behavior
      *
-     * @param      $string
+     * @param      $input
      * @param bool $set
      * @param bool $prepared
      *
-     * @return array|bool|string
+     * @return mixed
      * @throws DbException
      */
-    protected function operandi($string, bool $set, bool $prepared)
+    protected function operandi($input, bool $set, bool $prepared)
     {
-        if (empty($string) && $string !== "0") {
-            return ($set ? ' = NULL' : ' IS NULL');
+        switch (gettype($input)){
+            case 'integer':
+                return $input;
+            case 'NULL':
+                return $this->setNull($input, $set);
         }
-
-        $firstLetter = strtolower(substr($string, 0, 1));
+        if (empty($input)) {
+            return $this->setNull($input, $set);
+        }
+        $firstLetter = strtolower(substr($input, 0, 1));
         switch ($firstLetter) {
             case '=':
                 // important! this is the first rule and needs to stay as such!
                 $return = ' = ? ';
-                $this->addExclusion(substr($string, 1));
+                $this->addExclusion(substr($input, 1));
                 break;
             case '>':
             case '<':
-                $return = ' ' . $firstLetter . ' "' . intval(substr($string, 1)) . '"';
+                $return = ' ' . $firstLetter . ' "' . intval(substr($input, 1)) . '"';
                 break;
             case '.':
                 $return = ' = NOW()';
                 break;
             case '$':
-                $rest = substr($string, 1);
+                $rest = substr($input, 1);
                 if ($prepared) {
                     $return = ' = UNHEX(?)';
                     $this->addExclusion($rest, 's');
@@ -113,37 +118,42 @@ class DbOps
                 }
                 break;
             case '!':
-                if (strtolower($string) == '!null' || strlen($string) == 1) {
+                if (strtolower($input) == '!null' || strlen($input) == 1) {
                     if ($set) {
-                        $this->formatError([$string],
-                            'Cannot set "NOT NULL" as value for "' . substr($string, 1) . '"');
+                        $this->formatError([$input],
+                            'Cannot set "NOT NULL" as value for "' . substr($input, 1) . '"');
                     }
                     $return = ' IS NOT NULL ';
                 } else {
                     if ($set) {
-                        $this->formatError([$string], 'Cannot use "!= ' . substr($string, 1) . '" to set a value');
+                        $this->formatError([$input], 'Cannot use "!= ' . substr($input, 1) . '" to set a value');
                     }
-                    $return = ' != "' . substr($string, 1) . '"';
+                    $return = ' != "' . substr($input, 1) . '"';
                 }
                 break;
             case '{':
-                $return = ' ' . substr($string, 1, -1);
+                $return = ' ' . substr($input, 1, -1);
                 break;
             case '^':
                 $return = ($set ? ' = NULL' : ' IS NULL');
                 break;
             default:
-                if (strtolower($string) == 'null') {
+                if (strtolower($input) == 'null') {
                     $return = ($set ? ' = NULL' : ' IS NULL');
                 } elseif ($prepared) {
-                    $return = preg_match('/%/', $string) ? ' LIKE ? ' : ' = ? ';
-                    $this->addExclusion($string);
+                    $return = preg_match('/%/', $input) ? ' LIKE ? ' : ' = ? ';
+                    $this->addExclusion($input);
                 } else {
-                    $return = ' = "' . $string . '"';
+                    $return = ' = "' . $input . '"';
                 }
                 break;
         }
         return $return;
+    }
+
+    protected function setNull($value, bool $set): string
+    {
+        return ($set ? ' = NULL' : ' IS NULL');
     }
 
     /**

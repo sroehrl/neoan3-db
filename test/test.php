@@ -1,34 +1,36 @@
 <?php
 namespace Test;
-define('path',dirname(dirname(__FILE__)));
-define('db_host','localhost');
-define('db_name', 'test');
-define('db_user','root');
-define('db_password','');
-
-//optional
-define('db_assumes_uuid',true);
-define('db_dev_errors', true);
-
-require_once path . '/DbOps.php';
-require_once path . '/Db.php';
-require_once path . '/UuidHandler.php';
-require_once path . '/Deprecated.php';
-require_once path . '/DbException.php';
-require_once path . '/DbEnvironment.php';
-require_once path . '/Db.php';
 
 use Neoan3\Apps\Db;
-use Neoan3\Apps\DbException;
-use Neoan3\Apps\DbOps;
+use Neoan3\Apps\DbOOP;
 
-try {
-    $id = Db::uuid();
-} catch (DbException $e) {
-    var_dump($e->getMessage());
-    die();
-}
+require_once '../vendor/autoload.php';
+
+const path = __DIR__;
+
+/*Db::setEnvironment([
+    'host' => 'localhost',
+    'assumes_uuid' => true,
+    'name' => 'test',
+    'app_root' => __DIR__
+]);*/
+
+$db = new DbOOP([
+    'host' => 'localhost',
+    'assumes_uuid' => true,
+    'name' => 'test',
+    'app_root' => __DIR__
+]);
+// insert
+Db::debug();
+$test = $db->smart('user',[
+    'email'=>'adam@mail.com',
+    'some' => 0,
+    'last' => null,
+    'empty' => ''
+]);
+//$test = $db->easy('user.*',['^password']);
 
 
-var_dump($id->uuid);
-die();
+var_dump($test);
+
