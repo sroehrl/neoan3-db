@@ -18,11 +18,11 @@ class DbOps
     /**
      * @var array
      */
-    private static $preparedExclusions = [];
+    private static array $preparedExclusions = [];
     /**
      * @var DbEnvironment
      */
-    private static $_env;
+    private static DbEnvironment $_env;
 
     /**
      * DbOps constructor.
@@ -37,7 +37,7 @@ class DbOps
     /**
      * @return array
      */
-    protected function getExclusions()
+    protected function getExclusions(): array
     {
         return self::$preparedExclusions;
     }
@@ -190,7 +190,7 @@ class DbOps
      *
      * @return string
      */
-    private function _sanitizeAndAddBackticks($string)
+    private function _sanitizeAndAddBackticks($string): string
     {
         return $this->addBackticks(Db::sanitizeKey($string));
     }
@@ -202,7 +202,7 @@ class DbOps
      *
      * @return string
      */
-    protected function addBackticks($string)
+    protected function addBackticks($string): string
     {
         $parts = explode('.', $string);
         $result = '';
@@ -222,7 +222,7 @@ class DbOps
      *
      * @return string
      */
-    protected function checkAs($rest)
+    protected function checkAs($rest): string
     {
         if (empty($rest) || $rest == '' || strpos($rest, '*') !== false) {
             // catch asterisk-selector
@@ -281,7 +281,7 @@ class DbOps
      *
      * @return string
      */
-    public function mysqliStmtType($value)
+    public function mysqliStmtType($value): string
     {
         $value = trim($value);
         if (!preg_match('/[^0-9\.]/', $value) && substr($value, 0, 1) != 0) {
@@ -296,7 +296,7 @@ class DbOps
      *
      * @return bool
      */
-    public static function isBinary($str)
+    public static function isBinary($str): bool
     {
 //         return preg_match('~[^\x20-\x7E\t\r\n]~', $str) > 0;
         return !preg_match('//u', $str);

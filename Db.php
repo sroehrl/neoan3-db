@@ -34,21 +34,21 @@ class Db extends DbOps
     /**
      * @var DbEnvironment
      */
-    private static $_env;
+    private static DbEnvironment $_env;
     /**
      * @var DbOps
      */
-    private static $_ops;
+    private static DbOps $_ops;
 
     /**
      * Db initiator.
      */
     private static function init()
     {
-        if (!self::$_env) {
+        if (!isset(self::$_env)) {
             self::$_env = new DbEnvironment();
         }
-        if (!self::$_ops) {
+        if (!isset(self::$_ops)) {
             self::$_ops = new DbOps(self::$_env);
         }
     }
@@ -105,7 +105,7 @@ class Db extends DbOps
      * @return array|int|mixed
      * @throws DbException
      */
-    public static function delete($table, $id, $hard = false)
+    public static function delete($table, $id, bool $hard = false)
     {
         self::init();
         $table = self::$_ops->addBackticks(self::sanitizeKey($table));
@@ -128,7 +128,7 @@ class Db extends DbOps
      *
      * @return string
      */
-    private static function handleSelectandi($fields)
+    private static function handleSelectandi($fields): string
     {
         $i = 0;
         $res = '';
@@ -141,14 +141,14 @@ class Db extends DbOps
 
     /**
      * @param        $selectorString
-     * @param array  $conditionArray
-     * @param array  $callFunctions
+     * @param array $conditionArray
+     * @param array $callFunctions
      * @param string $output
      *
      * @return mixed
      * @throws DbException
      */
-    public static function easy($selectorString, $conditionArray = [], $callFunctions = [], $output = 'data')
+    public static function easy($selectorString, array $conditionArray = [], array $callFunctions = [], string $output = 'data')
     {
         self::init();
         $qStr = 'SELECT ';
@@ -165,7 +165,7 @@ class Db extends DbOps
             if ($remember && $remember != $table && !in_array($table, $joined)) {
                 $qStr .= ' JOIN ' . $table . ' ON ' . $remember . '.`id` = ' . $table . '.' . substr($remember, 0, -1) .
                          (self::$_env->get('casing') == 'snake' ? '_id` ' : 'Id` ');
-                array_push($joined, $table);
+                $joined[] = $table;
             } elseif (!$remember) {
                 $qStr .= $table;
                 $remember = $table;
@@ -188,25 +188,31 @@ class Db extends DbOps
 
     /**
      * @param $conditionArray
-     *
+     * @param string $connector
      * @return string
      * @throws DbException
      */
-    private static function handleConditions($conditionArray)
+    private static function handleConditions($conditionArray, $connector = 'AND'): string
     {
         $return = '';
         $i = 0;
         foreach ($conditionArray as $key => $value) {
+            if(is_array($value)) {
+                $return .= ($i > 0 ? "  $connector " : ' WHERE ') . '(' .  substr(self::handleConditions($value, 'OR'),7) . ')';
+                $i++;
+                continue;
+            }
             if (is_numeric($key)) {
                 $key = self::$_ops->addBackticks(substr($value, 1));
             }
             $key = self::sanitizeKey($key);
             $val = self::$_ops->operandi($value, false, $key);
-            $return .= ($i > 0 ? "  AND " : ' WHERE ') . self::$_ops->addBackticks($key) . $val;
+            $return .= ($i > 0 ? "  $connector " : ' WHERE ') . self::$_ops->addBackticks($key) . $val;
             $i++;
         }
         return $return;
     }
+
 
     /**
      * @param $qStr
@@ -593,35 +599,6 @@ class Db extends DbOps
         return preg_replace($pattern, '', $keyString);
     }
 
-    /**
-     * DEPRECATED
-     *
-     * NeoanPHP2.x users: handling JSON&HTML escaping now completely moved out of DB-app
-     * in favor of a single-responsibility approach
-     *
-     * @param $inp
-     *
-     * @return array|mixed
-     */
-    public static function escape($inp)
-    {
-        self::init();
-        self::deprecationWarning();
-        return Deprecated::escape($inp);
-    }
-
-
-    /**
-     * Creates a NOTICE
-     */
-    private static function deprecationWarning()
-    {
-        $caller = next(debug_backtrace());
-        $msg = 'Deprecated Db-function in function ' . $caller['function'] . ' called from ' . $caller['file'];
-        $msg .= ' on line ' . $caller['line'];
-        trigger_error($msg, E_USER_NOTICE);
-    }
-
 
     /**
      * Sets debugging to highest mode: query will not be executed
@@ -637,7 +614,7 @@ class Db extends DbOps
      *
      * @return string
      */
-    public static function secureJson($json)
+    public static function secureJson($json): string
     {
         self::init();
         return '{ = "' . addslashes($json) . '" }';

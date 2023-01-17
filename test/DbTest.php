@@ -139,6 +139,18 @@ class DbTest extends TestCase {
         $this->assertSame('SELECT UNIX_TIMESTAMP(`sam`.`time`)*1000 as "stamp" FROM `sam`', $c['sql']);
     }
 
+    public function testCallFunctions()
+    {
+        Db::debug();
+        $try = Db::easy('user.id', [], [
+            'orderBy' => ['name', 'DESC'],
+            'groupBy' => ['name']
+        ]);
+
+        $this->assertStringContainsString('ORDER BY name DESC', $try['sql']);
+        $this->assertStringContainsString('GROUP BY name', $try['sql']);
+    }
+
 
 
 }
