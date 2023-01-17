@@ -23,7 +23,7 @@ class DbCallFunctions
      *
      * @return string
      */
-    static function calls($array)
+    static function calls($array): string
     {
         $return = '';
         if (is_countable($array) && count($array) > 1) {
@@ -52,7 +52,7 @@ class DbCallFunctions
      *
      * @return string
      */
-    private static function orderBy($array)
+    private static function orderBy($array): string
     {
         $origin = $array;
         if (count($array) > 1) {
@@ -66,13 +66,13 @@ class DbCallFunctions
      *
      * @return string
      */
-    private static function groupBy($array)
+    private static function groupBy($array): string
     {
         $origin = $array;
         if (count($array) > 1) {
             self::calls(array_shift($array));
         }
-        return ' GROUP BY ' . $origin[0] . (intval($origin[1]) > 0 ? ', ' . $origin[1] : '');
+        return ' GROUP BY ' . implode(', ' ,$origin);
     }
 
     /**
@@ -80,7 +80,7 @@ class DbCallFunctions
      *
      * @return string
      */
-    private static function limit($array)
+    private static function limit($array): string
     {
         $origin = $array;
         if (count($array) > 1) {
@@ -92,7 +92,7 @@ class DbCallFunctions
 
 // Polyfill for PHP<7.3
 if (!function_exists('is_countable')) {
-    function is_countable($var)
+    function is_countable($var): bool
     {
         return (is_array($var) || $var instanceof Countable);
     }
