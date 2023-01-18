@@ -142,13 +142,13 @@ class Db extends DbOps
     /**
      * @param        $selectorString
      * @param array $conditionArray
-     * @param array $callFunctions
+     * @param array|null $callFunctions
      * @param string $output
      *
      * @return mixed
      * @throws DbException
      */
-    public static function easy($selectorString, array $conditionArray = [], array $callFunctions = [], string $output = 'data')
+    public static function easy($selectorString, array $conditionArray = [], ?array $callFunctions = [], string $output = 'data')
     {
         self::init();
         $qStr = 'SELECT ';
